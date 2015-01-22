@@ -24,3 +24,40 @@
  * POSSIBILITY OF SUCH DAMAGE.
  */
 
+#ifndef __FLUENTD_MESSAGE_HPP__
+#define __FLUENTD_MESSAGE_HPP__
+
+namespace fluentd {
+  class Message {
+  public:
+    class Object {
+    };
+
+    class Map : public Object {
+    };
+
+    class Array : public Object {
+    };
+
+    class String : public Object {
+    };
+
+    class Fixnum : public Object {
+    };
+
+    class Float : public Object {
+    };
+
+  private:
+    Object *root_;
+
+  public:
+    Message();
+    ~Message();    
+  };
+
+
+}
+
+
+#endif   // __SRC_FLUENTD_MESSAGE_H__

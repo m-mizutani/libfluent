@@ -13,9 +13,9 @@ LINK_DIRECTORIES(${LIB_DIR})
 
 # Build library
 
-FILE(GLOB BASESRCS "src/*.c" "src/*.h")
+FILE(GLOB BASESRCS "src/*.cc" "src/*.hpp")
 FILE(GLOB TESTSRCS "test/*.cc")
-FILE(GLOB HEADERS "src/fluentd/*.h")
+FILE(GLOB HEADERS "src/fluentd/*.hpp")
 
 ADD_LIBRARY(fluentd SHARED ${BASESRCS})
 TARGET_LINK_LIBRARIES(fluentd msgpack)
@@ -23,7 +23,7 @@ TARGET_LINK_LIBRARIES(fluentd msgpack)
 ADD_EXECUTABLE(fluentd-test ${TESTSRCS})
 TARGET_LINK_LIBRARIES(fluentd-test fluentd)
 
-INSTALL(FILES src/fluentd.h DESTINATION include/)
+INSTALL(FILES src/fluentd.hpp DESTINATION include/)
 INSTALL(FILES ${HEADERS} DESTINATION include/fluentd)
 
 
