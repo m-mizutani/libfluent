@@ -27,33 +27,58 @@
 #ifndef __FLUENTD_MESSAGE_HPP__
 #define __FLUENTD_MESSAGE_HPP__
 
+#include <msgpack.hpp>
+
 namespace fluentd {
   class Message {
   public:
-    class Object {
-    };
-
-    class Map : public Object {
-    };
-
-    class Array : public Object {
-    };
-
-    class String : public Object {
-    };
-
-    class Fixnum : public Object {
-    };
-
-    class Float : public Object {
-    };
-
-  private:
-    Object *root_;
-
-  public:
     Message();
-    ~Message();    
+    ~Message();
+    virtual void to_msgpack(msgpack::sbuffer *sbuf) = 0;
+  };
+
+  class Array;
+
+  class Map : public Message {
+  public:
+    Map() {};
+    ~Map() {};
+    Map *retain_map(const std::string &key);
+    Array *retain_array(const std::string &key);
+    void put(const std::string &key, const std::string &val);
+    void put(const std::string &key, int val);
+    void put(const std::string &key, float val);
+    void put(const std::string &key, bool val);
+    void to_msgpack(msgpack::sbuffer *sbuf);
+  };
+
+  class Array : public Message {
+  public:
+    Map *retain_map();
+    Array *retain_array();
+    void put(const std::string &key, const std::string &val);
+    void put(const std::string &key, int val);
+    void put(const std::string &key, float val);
+    void put(const std::string &key, bool val);
+    void to_msgpack(msgpack::sbuffer *sbuf);
+  };
+
+  class String : public Message {
+  public:
+    String(const std::string &val);
+    void to_msgpack(msgpack::sbuffer *sbuf);    
+  };
+
+  class Fixnum : public Message {
+  public:
+    Fixnum(int val);
+    void to_msgpack(msgpack::sbuffer *sbuf);
+  };
+
+  class Float : public Message {
+  public:
+    Float(float val);
+    void to_msgpack(msgpack::sbuffer *sbuf);
   };
 
 

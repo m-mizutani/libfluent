@@ -31,4 +31,11 @@ namespace fluentd {
   };
   Message::~Message() {
   }
+  void Map::put(const std::string &key, int val) {
+    // TODO: implement
+  }
+  void Map::to_msgpack(msgpack::sbuffer *sbuf) {
+    // TODO: implement
+  }
+
 }
