@@ -52,10 +52,9 @@ namespace fluentd {
     }
   }
   void Message::Map::to_msgpack(msgpack::packer<msgpack::sbuffer> *pk) const {
-    debug(true, "to_msgpack");
     pk->pack_map(this->map_.size());
+    // Iterate all key and value to convert msgpack.
     for(auto it = this->map_.begin(); it != this->map_.end(); it++) {
-      debug(true, "key: %s", (it->first).c_str());
       pk->pack(it->first);
       (it->second)->to_msgpack(pk);
     }
