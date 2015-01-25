@@ -117,6 +117,7 @@ namespace fluentd {
   }
 
 
+
   void Message::Array::push(const std::string &val) {
     Object *v = new String(val);
     this->array_.push_back(v);
