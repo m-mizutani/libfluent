@@ -116,6 +116,36 @@ namespace fluentd {
     }
   }
 
+
+  void Message::Array::push(const std::string &key, const std::string &val) {
+    Object *v = new String(val);
+    this->map_.insert(std::make_pair(key, v));
+    return true;
+  }
+  void Message::Array::push(const std::string &key, const char *val) {
+    Object *v = new String(val);
+    this->map_.insert(std::make_pair(key, v));
+    return true;
+  }
+  void Message::Array::push(const std::string &key, int val) {
+    Object *v = new Fixnum(val);
+    this->map_.insert(std::make_pair(key, v));
+    return true;
+  }
+  void Message::Array::push(const std::string &key, double val) {
+    Object *v = new Float(val);
+    this->map_.insert(std::make_pair(key, v));
+    return true;
+  }
+  void Message::Array::push(const std::string &key, bool val) {
+    Object *v = new Bool(val);
+    this->map_.insert(std::make_pair(key, v));
+    return true;
+  }
+
+
+
+
   Message::Fixnum::Fixnum(int val) : val_(val) {}
   void Message::Fixnum::to_msgpack(msgpack::packer<msgpack::sbuffer> *pk) 
     const {
