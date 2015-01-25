@@ -34,53 +34,57 @@ namespace fluentd {
   public:
     Message();
     ~Message();
-    virtual void to_msgpack(msgpack::sbuffer *sbuf) = 0;
+
+    class Object {
+    public:
+      virtual void to_msgpack(msgpack::sbuffer *sbuf) = 0;
+    };
+
+    class Array;
+
+    class Map : public Object {
+    public:
+      Map() {};
+      ~Map() {};
+      Map *retain_map(const std::string &key);
+      Array *retain_array(const std::string &key);
+      void put(const std::string &key, const std::string &val);
+      void put(const std::string &key, int val);
+      void put(const std::string &key, float val);
+      void put(const std::string &key, bool val);
+      void to_msgpack(msgpack::sbuffer *sbuf);
+    };
+
+    class Array : public Object {
+    public:
+      Map *retain_map();
+      Array *retain_array();
+      void put(const std::string &key, const std::string &val);
+      void put(const std::string &key, int val);
+      void put(const std::string &key, float val);
+      void put(const std::string &key, bool val);
+      void to_msgpack(msgpack::sbuffer *sbuf);
+    };
+
+    class String : public Object {
+    public:
+      String(const std::string &val);
+      void to_msgpack(msgpack::sbuffer *sbuf);    
+    };
+
+    class Fixnum : public Object {
+    public:
+      Fixnum(int val);
+      void to_msgpack(msgpack::sbuffer *sbuf);
+    };
+
+    class Float : public Object {
+    public:
+      Float(float val);
+      void to_msgpack(msgpack::sbuffer *sbuf);
+    };
+
   };
-
-  class Array;
-
-  class Map : public Message {
-  public:
-    Map() {};
-    ~Map() {};
-    Map *retain_map(const std::string &key);
-    Array *retain_array(const std::string &key);
-    void put(const std::string &key, const std::string &val);
-    void put(const std::string &key, int val);
-    void put(const std::string &key, float val);
-    void put(const std::string &key, bool val);
-    void to_msgpack(msgpack::sbuffer *sbuf);
-  };
-
-  class Array : public Message {
-  public:
-    Map *retain_map();
-    Array *retain_array();
-    void put(const std::string &key, const std::string &val);
-    void put(const std::string &key, int val);
-    void put(const std::string &key, float val);
-    void put(const std::string &key, bool val);
-    void to_msgpack(msgpack::sbuffer *sbuf);
-  };
-
-  class String : public Message {
-  public:
-    String(const std::string &val);
-    void to_msgpack(msgpack::sbuffer *sbuf);    
-  };
-
-  class Fixnum : public Message {
-  public:
-    Fixnum(int val);
-    void to_msgpack(msgpack::sbuffer *sbuf);
-  };
-
-  class Float : public Message {
-  public:
-    Float(float val);
-    void to_msgpack(msgpack::sbuffer *sbuf);
-  };
-
 
 }
 
