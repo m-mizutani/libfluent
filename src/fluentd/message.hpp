@@ -28,6 +28,7 @@
 #define __FLUENTD_MESSAGE_HPP__
 
 #include <msgpack.hpp>
+#include <map>
 
 namespace fluentd {
   class Message {
@@ -37,22 +38,27 @@ namespace fluentd {
 
     class Object {
     public:
-      virtual void to_msgpack(msgpack::sbuffer *sbuf) = 0;
+      virtual void to_msgpack(msgpack::packer<msgpack::sbuffer> *pk) 
+        const = 0;
     };
 
     class Array;
 
     class Map : public Object {
+    private:
+      std::map<std::string, Object*> map_;
+
     public:
-      Map() {};
-      ~Map() {};
+      Map();
+      ~Map();
       Map *retain_map(const std::string &key);
       Array *retain_array(const std::string &key);
-      void put(const std::string &key, const std::string &val);
-      void put(const std::string &key, int val);
-      void put(const std::string &key, float val);
-      void put(const std::string &key, bool val);
-      void to_msgpack(msgpack::sbuffer *sbuf);
+      bool set(const std::string &key, const std::string &val);
+      bool set(const std::string &key, int val);
+      bool set(const std::string &key, float val);
+      bool set(const std::string &key, bool val);
+      bool del(const std::string &key);
+      void to_msgpack(msgpack::packer<msgpack::sbuffer> *pk) const;
     };
 
     class Array : public Object {
@@ -63,25 +69,28 @@ namespace fluentd {
       void put(const std::string &key, int val);
       void put(const std::string &key, float val);
       void put(const std::string &key, bool val);
-      void to_msgpack(msgpack::sbuffer *sbuf);
+      void to_msgpack(msgpack::packer<msgpack::sbuffer> *pk) const;
     };
 
     class String : public Object {
     public:
       String(const std::string &val);
-      void to_msgpack(msgpack::sbuffer *sbuf);    
+      void to_msgpack(msgpack::packer<msgpack::sbuffer> *pk) const;
     };
 
     class Fixnum : public Object {
+    private:
+      int val_;
+
     public:
       Fixnum(int val);
-      void to_msgpack(msgpack::sbuffer *sbuf);
+      void to_msgpack(msgpack::packer<msgpack::sbuffer> *pk) const;
     };
 
     class Float : public Object {
     public:
       Float(float val);
-      void to_msgpack(msgpack::sbuffer *sbuf);
+      void to_msgpack(msgpack::packer<msgpack::sbuffer> *pk) const;
     };
 
   };

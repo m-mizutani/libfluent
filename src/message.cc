@@ -25,18 +25,46 @@
  */
 
 #include "./fluentd/message.hpp"
+#include "./debug.h"
 
 namespace fluentd {
   Message::Message() {
   };
   Message::~Message() {
   }
-  void Message::Map::put(const std::string &key, int val) {
-    
-    // TODO: implement
+
+  Message::Map::Map() {
   }
-  void Message::Map::to_msgpack(msgpack::sbuffer *sbuf) {
-    // TODO: implement
+  Message::Map::~Map() {
+    for (auto it = this->map_.begin(); it != this->map_.end(); it++) {
+      delete it->second;
+    }
   }
+  bool Message::Map::set(const std::string &key, int val) {
+    if (this->map_.find(key) == this->map_.end()) {
+      // Create and insert value
+      Fixnum *n = new Fixnum(val);
+      this->map_.insert(std::make_pair(key, n));
+      return true;
+    } else {
+      // Already exists
+      return false;
+    }
+  }
+  void Message::Map::to_msgpack(msgpack::packer<msgpack::sbuffer> *pk) const {
+    debug(true, "to_msgpack");
+    pk->pack_map(this->map_.size());
+    for(auto it = this->map_.begin(); it != this->map_.end(); it++) {
+      debug(true, "key: %s", (it->first).c_str());
+      pk->pack(it->first);
+      (it->second)->to_msgpack(pk);
+    }
+  }
+
+  Message::Fixnum::Fixnum(int val) : val_(val) {}
+  void Message::Fixnum::to_msgpack(msgpack::packer<msgpack::sbuffer> *pk) 
+    const {
+    pk->pack(this->val_);
+  }  
 
 }
