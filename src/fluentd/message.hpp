@@ -65,13 +65,17 @@ namespace fluentd {
     };
 
     class Array : public Object {
+      std::deque<Object*> array_;
     public:
+      Array() {}
+      ~Array() {}
       Map *retain_map();
       Array *retain_array();
-      void put(const std::string &key, const std::string &val);
-      void put(const std::string &key, int val);
-      void put(const std::string &key, double val);
-      void put(const std::string &key, bool val);
+      void push(const std::string &key, const std::string &val);
+      void push(const std::string &key, const char *val);
+      void push(const std::string &key, int val);
+      void push(const std::string &key, double val);
+      void push(const std::string &key, bool val);
       void to_msgpack(msgpack::packer<msgpack::sbuffer> *pk) const;
     };
 
