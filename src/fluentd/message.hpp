@@ -38,6 +38,8 @@ namespace fluentd {
 
     class Object {
     public:
+      Object() {}
+      virtual ~Object() {}
       virtual void to_msgpack(msgpack::packer<msgpack::sbuffer> *pk) 
         const = 0;
     };
@@ -47,15 +49,16 @@ namespace fluentd {
     class Map : public Object {
     private:
       std::map<std::string, Object*> map_;
-
+      static const bool DBG;
     public:
       Map();
       ~Map();
       Map *retain_map(const std::string &key);
       Array *retain_array(const std::string &key);
       bool set(const std::string &key, const std::string &val);
+      bool set(const std::string &key, const char *val);
       bool set(const std::string &key, int val);
-      bool set(const std::string &key, float val);
+      bool set(const std::string &key, double val);
       bool set(const std::string &key, bool val);
       bool del(const std::string &key);
       void to_msgpack(msgpack::packer<msgpack::sbuffer> *pk) const;
@@ -67,29 +70,41 @@ namespace fluentd {
       Array *retain_array();
       void put(const std::string &key, const std::string &val);
       void put(const std::string &key, int val);
-      void put(const std::string &key, float val);
+      void put(const std::string &key, double val);
       void put(const std::string &key, bool val);
       void to_msgpack(msgpack::packer<msgpack::sbuffer> *pk) const;
     };
 
     class String : public Object {
+    private:
+      std::string val_;
     public:
       String(const std::string &val);
+      String(const char *val);
       void to_msgpack(msgpack::packer<msgpack::sbuffer> *pk) const;
     };
 
     class Fixnum : public Object {
     private:
       int val_;
-
     public:
       Fixnum(int val);
       void to_msgpack(msgpack::packer<msgpack::sbuffer> *pk) const;
     };
 
     class Float : public Object {
+    private:
+      double val_;
     public:
-      Float(float val);
+      Float(double val);
+      void to_msgpack(msgpack::packer<msgpack::sbuffer> *pk) const;
+    };
+
+    class Bool : public Object {
+    private:
+      bool val_;
+    public:
+      Bool(bool val);
       void to_msgpack(msgpack::packer<msgpack::sbuffer> *pk) const;
     };
 

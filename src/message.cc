@@ -1,4 +1,4 @@
-/*-
+/*
  * Copyright (c) 2015 Masayoshi Mizutani <mizutani@sfc.wide.ad.jp>
  * All rights reserved.
  *
@@ -33,6 +33,7 @@ namespace fluentd {
   Message::~Message() {
   }
 
+  const bool Message::Map::DBG(false);
   Message::Map::Map() {
   }
   Message::Map::~Map() {
@@ -40,10 +41,12 @@ namespace fluentd {
       delete it->second;
     }
   }
+
+  // TODO: refactoring to merge set int, string, float, bool
   bool Message::Map::set(const std::string &key, int val) {
     if (this->map_.find(key) == this->map_.end()) {
       // Create and insert value
-      Fixnum *n = new Fixnum(val);
+      Object *n = new Fixnum(val);
       this->map_.insert(std::make_pair(key, n));
       return true;
     } else {
@@ -51,6 +54,59 @@ namespace fluentd {
       return false;
     }
   }
+  bool Message::Map::set(const std::string &key, const char *val) {
+    if (this->map_.find(key) == this->map_.end()) {
+      // Create and insert value
+      debug(DBG, "create String object\n");
+
+      Object *v = new String(val);
+      this->map_.insert(std::make_pair(key, v));
+      return true;
+    } else {
+      // Already exists
+      return false;
+    }
+  }
+  bool Message::Map::set(const std::string &key, const std::string &val) {
+    if (this->map_.find(key) == this->map_.end()) {
+      // Create and insert value
+      debug(DBG, "create String object\n");
+
+      Object *v = new String(val);
+      this->map_.insert(std::make_pair(key, v));
+      return true;
+    } else {
+      // Already exists
+      return false;
+    }
+  }
+  bool Message::Map::set(const std::string &key, double val) {
+
+    if (this->map_.find(key) == this->map_.end()) {
+      // Create and insert value
+      debug(DBG, "create Double object for %s\n", key.c_str());
+      Object *v = new Float(val);
+      this->map_.insert(std::make_pair(key, v));
+      return true;
+    } else {
+      // Already exists
+      return false;
+    }
+  }
+  bool Message::Map::set(const std::string &key, bool val) {
+
+    if (this->map_.find(key) == this->map_.end()) {
+      // Create and insert value
+      debug(DBG, "create Bool object for %s\n", key.c_str());
+      Object *v = new Bool(val);
+      this->map_.insert(std::make_pair(key, v));
+      return true;
+    } else {
+      // Already exists
+      return false;
+    }
+  }
+
   void Message::Map::to_msgpack(msgpack::packer<msgpack::sbuffer> *pk) const {
     pk->pack_map(this->map_.size());
     // Iterate all key and value to convert msgpack.
@@ -66,4 +122,23 @@ namespace fluentd {
     pk->pack(this->val_);
   }  
 
+  Message::String::String(const std::string &val) : val_(val) {}
+  Message::String::String(const char *val) : val_(val) {}
+  void Message::String::to_msgpack(msgpack::packer<msgpack::sbuffer> *pk) 
+    const {
+    pk->pack(this->val_);
+  }
+
+  Message::Float::Float(double val) : val_(val) {}
+  void Message::Float::to_msgpack(msgpack::packer<msgpack::sbuffer> *pk) 
+    const {
+    pk->pack(this->val_);
+  }  
+
+  Message::Bool::Bool(bool val) : val_(val) {}
+  void Message::Bool::to_msgpack(msgpack::packer<msgpack::sbuffer> *pk) 
+    const {
+    pk->pack(this->val_);
+  }  
+    
 }
