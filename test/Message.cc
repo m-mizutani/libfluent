@@ -72,6 +72,34 @@ TEST(Message, Map) {
                    0x6E, 0x74, 0xCD, 0x09, 0x29, 0xA3, 0x73, 0x74,
                    0x72, 0xA4, 0x74, 0x65, 0x73, 0x74};
 
+  obj->to_msgpack(&pkr);
+  EXPECT_EQ(sbuf.size(), sizeof(expect));
+  EXPECT_TRUE(0 == memcmp(sbuf.data(), expect, sizeof(expect)));
+}
+
+TEST(Message, Array) {
+  fluentd::Message::Array *obj = new fluentd::Message::Array();
+  msgpack::sbuffer sbuf;
+  msgpack::packer<msgpack::sbuffer> pkr(&sbuf);
+
+  // Bool
+  obj->push(true);
+  // Float
+  obj->push(34.567);
+  // Fixnum
+  obj->push(2345);
+  // String
+  obj->push("test");
+
+  /*
+    d = [true, 34.567, 2345, 'test']
+    require 'msgpack'; a=[]; d.to_msgpack.each_byte{|v| 
+    a.push(sprintf("0x%02X", v))};puts "{#{a.join(', ')}};"
+  */
+
+  char expect[] = {0x94, 0xC3, 0xCB, 0x40, 0x41, 0x48, 0x93, 0x74,
+                   0xBC, 0x6A, 0x7F, 0xCD, 0x09, 0x29, 0xA4, 0x74,
+                   0x65, 0x73, 0x74};
 
   obj->to_msgpack(&pkr);
   EXPECT_EQ(sbuf.size(), sizeof(expect));

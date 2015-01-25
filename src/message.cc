@@ -117,33 +117,33 @@ namespace fluentd {
   }
 
 
-  void Message::Array::push(const std::string &key, const std::string &val) {
+  void Message::Array::push(const std::string &val) {
     Object *v = new String(val);
-    this->map_.insert(std::make_pair(key, v));
-    return true;
+    this->array_.push_back(v);
   }
-  void Message::Array::push(const std::string &key, const char *val) {
+  void Message::Array::push(const char *val) {
     Object *v = new String(val);
-    this->map_.insert(std::make_pair(key, v));
-    return true;
+    this->array_.push_back(v);
   }
-  void Message::Array::push(const std::string &key, int val) {
+  void Message::Array::push(int val) {
     Object *v = new Fixnum(val);
-    this->map_.insert(std::make_pair(key, v));
-    return true;
+    this->array_.push_back(v);
   }
-  void Message::Array::push(const std::string &key, double val) {
+  void Message::Array::push(double val) {
     Object *v = new Float(val);
-    this->map_.insert(std::make_pair(key, v));
-    return true;
+    this->array_.push_back(v);
   }
-  void Message::Array::push(const std::string &key, bool val) {
+  void Message::Array::push(bool val) {
     Object *v = new Bool(val);
-    this->map_.insert(std::make_pair(key, v));
-    return true;
+    this->array_.push_back(v);
   }
 
-
+  void Message::Array::to_msgpack(msgpack::packer<msgpack::sbuffer> *pk) const {
+    pk->pack_array(this->array_.size());
+    for(size_t i = 0; i < this->array_.size(); i++) {
+      this->array_[i]->to_msgpack(pk);
+    }
+  }
 
 
   Message::Fixnum::Fixnum(int val) : val_(val) {}

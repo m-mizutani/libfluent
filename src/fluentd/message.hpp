@@ -32,9 +32,13 @@
 
 namespace fluentd {
   class Message {
+  private:
+    time_t ts_;
+
   public:
     Message();
     ~Message();
+    void set_ts(time_t ts);
 
     class Object {
     public:
@@ -65,17 +69,17 @@ namespace fluentd {
     };
 
     class Array : public Object {
-      std::deque<Object*> array_;
+      std::vector<Object*> array_;
     public:
       Array() {}
       ~Array() {}
       Map *retain_map();
       Array *retain_array();
-      void push(const std::string &key, const std::string &val);
-      void push(const std::string &key, const char *val);
-      void push(const std::string &key, int val);
-      void push(const std::string &key, double val);
-      void push(const std::string &key, bool val);
+      void push(const std::string &val);
+      void push(const char *val);
+      void push(int val);
+      void push(double val);
+      void push(bool val);
       void to_msgpack(msgpack::packer<msgpack::sbuffer> *pk) const;
     };
 
