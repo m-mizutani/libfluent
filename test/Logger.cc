@@ -51,13 +51,24 @@ protected:
 
   
   FluentdTest() :
+    pid_(0),
     out_ptn_("(\\d{4}-\\d{2}-\\d{2} \\d{2}:\\d{2}:\\d{2}) "
-             "\\+\\d{4} (\\S+): (.*)") {
+             "\\+\\d{4} (\\S+): (.*)")
+  {
   }
   virtual ~FluentdTest() {
   }
 
   virtual void SetUp() {
+    start_fluentd();
+  }
+  virtual void TearDown() {
+    if (this->pid_ > 0) {
+      stop_fluentd();
+    }
+  }
+
+  void start_fluentd() {
     int pipe_c2p[2];
     ASSERT_TRUE(pipe(pipe_c2p) >= 0);
     
@@ -93,14 +104,16 @@ protected:
       ASSERT_TRUE(this->pipe_ != NULL);
     }
   }
-  virtual void TearDown() {
+
+  void stop_fluentd() {
     kill(this->pid_, SIGINT);
     int stat;
     int rc = waitpid(this->pid_, &stat, 0);
     ASSERT_EQ(this->pid_, rc);
+    this->pid_ = 0;
     // EXPECT_TRUE(WIFSTOPPED(stat));
   }
-
+  
   void get_line(std::string *tag, std::string *ts, std::string *rec) {
     char buf[BUFSIZ];
     EXPECT_TRUE(NULL != fgets(buf, BUFSIZ, this->pipe_));
