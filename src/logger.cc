@@ -24,7 +24,50 @@
  * POSSIBILITY OF SUCH DAMAGE.
  */
 
+#include <sys/time.h>
 #include "./fluentd/logger.hpp"
+#include "./fluentd/socket.hpp"
+#include "./fluentd/message.hpp"
 
 namespace fluentd {
+  Logger::Logger() : sock_(nullptr) {
+  }
+  Logger::~Logger() {
+  }
+  Message* Logger::retain_message() {
+    Message *msg = new Message();
+    this->msg_set_.insert(msg);
+    return msg;
+  }
+  bool Logger::emit(Message *msg, const std::string &tag, time_t ts) {
+    if (this->msg_set_.find(msg) == this->msg_set_.end()) {
+      this->errmsg_ = "invalid Message instance, "
+        "should be got by Logger::retain_message()";
+      return false;
+    }
+
+    this->msg_set_.erase(msg);
+
+    if (ts == 0) {
+      struct timeval tv;
+      gettimeofday(&tv, nullptr);
+      ts = tv.tv_sec;
+    }
+
+    msgpack::sbuffer buf;
+    msgpack::packer <msgpack::sbuffer> pk (&buf);
+    pk.pack_array(3);
+    pk.pack(tag);
+    pk.pack(ts);
+    msg->to_msgpack(&pk);
+
+    if (this->sock_) {
+      this->sock_->send(buf.data(), buf.size());
+    }
+
+    delete msg;
+    
+    return true;
+  }
+
 }

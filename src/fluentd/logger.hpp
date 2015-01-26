@@ -27,16 +27,24 @@
 #ifndef __FLUENTD_LOGGER_HPP__
 #define __FLUENTD_LOGGER_HPP__
 
-#include "./socket.hpp"
+#include <set>
+#include <string>
 
 namespace fluentd {
+  class Message;
+  class Socket;
+  
   class Logger {
   private:
-
-
+    std::set<Message*> msg_set_;
+    Socket *sock_;
+    std::string errmsg_;
+    
   public:
     Logger();
-    ~Logger();    
+    ~Logger();
+    Message* retain_message();
+    bool emit(Message *msg, const std::string &tag, time_t ts=0);
   };
 
 }

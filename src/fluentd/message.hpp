@@ -32,13 +32,12 @@
 
 namespace fluentd {
   class Message {
-  private:
-    time_t ts_;
-
+    
   public:
     Message();
     ~Message();
     void set_ts(time_t ts);
+    void to_msgpack(msgpack::packer<msgpack::sbuffer> *pk) const;
 
     class Object {
     public:
@@ -115,6 +114,10 @@ namespace fluentd {
       Bool(bool val);
       void to_msgpack(msgpack::packer<msgpack::sbuffer> *pk) const;
     };
+
+  private:    
+    time_t ts_;
+    Map root_;
 
   };
 

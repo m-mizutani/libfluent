@@ -32,7 +32,11 @@ namespace fluentd {
   };
   Message::~Message() {
   }
+  void Message::to_msgpack(msgpack::packer<msgpack::sbuffer> *pk) const {
+    this->root_.to_msgpack(pk);
+  }
 
+  
   const bool Message::Map::DBG(false);
   Message::Map::Map() {
   }
