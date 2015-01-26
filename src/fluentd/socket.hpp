@@ -42,6 +42,7 @@ namespace fluentd {
     ~Socket();
     bool connect();
     bool send(void *data, size_t len);
+    const std::string& errmsg() const { return this->errmsg_; }
   };
 
 }

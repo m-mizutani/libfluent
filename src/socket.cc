@@ -35,6 +35,7 @@
 #include <netdb.h>
 #include <arpa/inet.h>
 #include <errno.h>
+#include <signal.h>
 
 #include "./fluentd/socket.hpp"
 #include "./debug.h"
@@ -43,13 +44,13 @@
 namespace fluentd {
   Socket::Socket(const std::string &host, const std::string &port) :
     host_(host), port_(port){
-    
+    signal(SIGPIPE, SIG_IGN);
   }
   Socket::~Socket() {
     ::close(this->sock_);
   }
   bool Socket::connect() {
-    const bool DBG = true;
+    const bool DBG = false;
     bool rc = true;
     debug(DBG, "host=%s, port=%s", this->host_.c_str(), this->port_.c_str());
 
@@ -76,13 +77,18 @@ namespace fluentd {
         continue;
       }
 
-      if (::connect(this->sock_, rp->ai_addr, rp->ai_addrlen) != -1) {
+      if (::connect(this->sock_, rp->ai_addr, rp->ai_addrlen) == 0) {
         char buf[INET6_ADDRSTRLEN];
         struct sockaddr_in *addr_in = (struct sockaddr_in *) rp->ai_addr;
         ::inet_ntop(rp->ai_family, &addr_in->sin_addr.s_addr, buf,
                     rp->ai_addrlen);
 
         debug(DBG, "connected to %s", buf);
+        /*
+        int optval = 1;
+        setsockopt(this->sock_, SOL_SOCKET, SO_NOSIGPIPE,
+                   (void *)&optval, sizeof(int));
+        */        
         break;
       }
     }

@@ -43,6 +43,8 @@ namespace fluentd {
   public:
     Logger();
     ~Logger();
+    bool set_dest(const std::string &host, const std::string &port);
+    bool has_dest() const;
     Message* retain_message();
     bool emit(Message *msg, const std::string &tag, time_t ts=0);
   };

@@ -111,7 +111,8 @@ namespace fluentd {
     }
   }
 
-  void Message::Map::to_msgpack(msgpack::packer<msgpack::sbuffer> *pk) const {
+  void Message::Map::to_msgpack(msgpack::packer<msgpack::sbuffer> *pk)
+    const {
     pk->pack_map(this->map_.size());
     // Iterate all key and value to convert msgpack.
     for(auto it = this->map_.begin(); it != this->map_.end(); it++) {

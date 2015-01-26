@@ -34,11 +34,29 @@ namespace fluentd {
   }
   Logger::~Logger() {
   }
+
   Message* Logger::retain_message() {
     Message *msg = new Message();
     this->msg_set_.insert(msg);
     return msg;
   }
+
+  bool Logger::set_dest(const std::string &host, const std::string &port) {
+    this->sock_ = new Socket(host, port);
+    if (this->sock_->connect()) {
+      return true;
+    } else {
+      this->errmsg_ = this->sock_->errmsg();
+      delete this->sock_;
+      this->sock_ = nullptr;
+      return false;
+    }
+  }
+
+  bool Logger::has_dest() const {
+    return (this->sock_ != NULL);
+  }
+
   bool Logger::emit(Message *msg, const std::string &tag, time_t ts) {
     if (this->msg_set_.find(msg) == this->msg_set_.end()) {
       this->errmsg_ = "invalid Message instance, "
