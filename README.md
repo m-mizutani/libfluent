@@ -4,22 +4,25 @@ libfluentd
 Fluentd library in C++. The library makes C++ program available to send logs 
 to fluentd daemon directly.
 
-    #include <fluentd.hpp>
+```c++
+#include <fluentd.hpp>
 	
-	int main(int argc, char *argv[]) {
-	  fluentd::Logger *logger = new fluentd::Logger("localhost", 24224);
+int main(int argc, char *argv[]) {
+  fluentd::Logger *logger = new fluentd::Logger("localhost", 24224);
 	  
-      // Emit ["tag.simple", 1422315xxx, {"user": "root", "port": 22}]
-      logger->log("tag.simple", "user", "root", "port", 22);
+  // Emit ["tag.simple", 1422315xxx, {"user": "root", "port": 22}]
+  logger->log("tag.simple", "user", "root", "port", 22);
 	  	  
-      // Emit ["tag.http", 1422315xxx, {"url": "http://github.com", "port": 443}]
-	  fluentd::Message *msg = logger->retain_message("tag.http");
-	  msg->set("url", "http://github.com");
-	  msg->set("port", 443);
-	  logger->emit(msg);
-	  
-	  delete logger;
-    }
+  // Emit ["tag.http", 1422315xxx, {"url": "http://github.com", "port": 443}]
+  fluentd::Message *msg = logger->retain_message("tag.http");
+  msg->set("url", "http://github.com");
+  msg->set("port", 443);
+  logger->emit(msg);
+  
+  delete logger;
+}
+```
+
 
 Prerequisite
 --------------
