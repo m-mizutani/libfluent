@@ -24,8 +24,83 @@
  * POSSIBILITY OF SUCH DAMAGE.
  */
 
+#include <sys/stat.h>
+#include <fcntl.h>
+#include <string.h>
+#include <unistd.h>
+#include <stdio.h>
+#include <sys/types.h>
+#include <sys/socket.h>
+#include <netinet/in.h>
+#include <netdb.h>
+#include <arpa/inet.h>
+#include <errno.h>
+
 #include "./fluentd/socket.hpp"
+#include "./debug.h"
+
 
 namespace fluentd {
+  Socket::Socket(const std::string &host, const std::string &port) :
+    host_(host), port_(port){
+    
+  }
+  Socket::~Socket() {
+    ::close(this->sock_);
+  }
+  bool Socket::connect() {
+    const bool DBG = true;
+    bool rc = true;
+    debug(DBG, "host=%s, port=%s", this->host_.c_str(), this->port_.c_str());
+
+    struct addrinfo hints;
+    struct addrinfo *result, *rp;
+    memset(&hints, 0, sizeof(struct addrinfo));
+    hints.ai_family = AF_UNSPEC;
+    hints.ai_socktype = SOCK_STREAM;
+    hints.ai_flags = 0;
+    hints.ai_protocol = 0;
+
+    int r;
+    if (0 != (r = ::getaddrinfo(this->host_.c_str(), this->port_.c_str(),
+                                &hints, &result))) {
+      this->errmsg_.assign(gai_strerror(r));
+      return false;
+      // throw Exception("getaddrinfo error: " + errmsg);
+    }
+
+    for (rp = result; rp != NULL; rp = rp->ai_next) {
+      this->sock_ = ::socket(rp->ai_family, rp->ai_socktype,
+                             rp->ai_protocol);
+      if (this->sock_ == -1) {
+        continue;
+      }
+
+      if (::connect(this->sock_, rp->ai_addr, rp->ai_addrlen) != -1) {
+        char buf[INET6_ADDRSTRLEN];
+        struct sockaddr_in *addr_in = (struct sockaddr_in *) rp->ai_addr;
+        ::inet_ntop(rp->ai_family, &addr_in->sin_addr.s_addr, buf,
+                    rp->ai_addrlen);
+
+        debug(DBG, "connected to %s", buf);
+        break;
+      }
+    }
+
+    if (rp == NULL) {
+      // throw Exception("no avaiable address for " + this->host_);
+      rc = false;
+    }
+    
+    freeaddrinfo(result);
+    return rc;
+  }
+  bool Socket::send(void *data, size_t len) {
+    if (0 > ::write(this->sock_, data, len)) {
+      this->errmsg_.assign(strerror(errno));
+      return false;
+    }
+    return true;
+  }
 
 }

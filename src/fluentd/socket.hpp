@@ -27,14 +27,21 @@
 #ifndef __FLUENTD_SOCKET_HPP__
 #define __FLUENTD_SOCKET_HPP__
 
+#include <string>
+
 namespace fluentd {
   class Socket {
   private:
-
-
+    int sock_;
+    std::string host_;
+    std::string port_;
+    std::string errmsg_;
+    
   public:
-    Socket();
-    ~Socket();    
+    Socket(const std::string &host, const std::string &port);
+    ~Socket();
+    bool connect();
+    bool send(void *data, size_t len);
   };
 
 }
