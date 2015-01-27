@@ -1,4 +1,4 @@
-libfluentd
+libfluent
 ==============
 
 Fluentd library in C++. The library makes C++ program available to send logs 

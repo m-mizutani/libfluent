@@ -24,13 +24,13 @@
  * POSSIBILITY OF SUCH DAMAGE.
  */
 
-#ifndef __FLUENTD_MESSAGE_HPP__
-#define __FLUENTD_MESSAGE_HPP__
+#ifndef __FLUENT_MESSAGE_HPP__
+#define __FLUENT_MESSAGE_HPP__
 
 #include <msgpack.hpp>
 #include <map>
 
-namespace fluentd {
+namespace fluent {
   class Message {
     
   public:
@@ -124,4 +124,4 @@ namespace fluentd {
 }
 
 
-#endif   // __SRC_FLUENTD_MESSAGE_H__
+#endif   // __SRC_FLUENT_MESSAGE_H__

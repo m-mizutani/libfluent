@@ -30,12 +30,12 @@
 #include <math.h>
 #include <unistd.h>
 
-#include "./fluentd/logger.hpp"
-#include "./fluentd/socket.hpp"
-#include "./fluentd/message.hpp"
+#include "./fluent/logger.hpp"
+#include "./fluent/socket.hpp"
+#include "./fluent/message.hpp"
 #include "./debug.h"
 
-namespace fluentd {
+namespace fluent {
   const int Logger::WAIT_MAX = 120 * 1000;
   Logger::Logger(const std::string &host, int port) :
     host_(host),

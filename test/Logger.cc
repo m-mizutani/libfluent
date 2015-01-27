@@ -33,11 +33,11 @@
 
 
 #include "./gtest.h"
-#include "../src/fluentd/logger.hpp"
+#include "../src/fluent/logger.hpp"
 
 #include "../src/debug.h"
 
-class FluentdTest : public ::testing::Test {
+class FluentTest : public ::testing::Test {
 private:
   enum {
     RP = 0, WP = 1
@@ -50,25 +50,25 @@ protected:
   std::regex out_ptn_;
 
   
-  FluentdTest() :
+  FluentTest() :
     pid_(0),
     out_ptn_("(\\d{4}-\\d{2}-\\d{2} \\d{2}:\\d{2}:\\d{2}) "
              "\\+\\d{4} (\\S+): (.*)")
   {
   }
-  virtual ~FluentdTest() {
+  virtual ~FluentTest() {
   }
 
   virtual void SetUp() {
-    start_fluentd();
+    start_fluent();
   }
   virtual void TearDown() {
     if (this->pid_ > 0) {
-      stop_fluentd();
+      stop_fluent();
     }
   }
 
-  void start_fluentd() {
+  void start_fluent() {
     int pipe_c2p[2];
     ASSERT_TRUE(pipe(pipe_c2p) >= 0);
     
@@ -77,9 +77,9 @@ protected:
       // Child
       /*
       char *const args[6] = {
-        "fluentd",
+        "fluent",
         "-q", "--no-supervisor",
-        "-c", "test/fluentd.conf", NULL};
+        "-c", "test/fluent.conf", NULL};
       */
       std::vector<std::string> arg = {"fluentd",
                                       "-q", "--no-supervisor",
@@ -105,7 +105,7 @@ protected:
     }
   }
 
-  void stop_fluentd() {
+  void stop_fluent() {
     kill(this->pid_, SIGINT);
     int stat;
     int rc = waitpid(this->pid_, &stat, 0);
@@ -128,9 +128,9 @@ protected:
 
 };
 
-TEST_F(FluentdTest, Logger) {
-  fluentd::Logger *logger = new fluentd::Logger("localhost", 24224);
-  fluentd::Message *msg = logger->retain_message();
+TEST_F(FluentTest, Logger) {
+  fluent::Logger *logger = new fluent::Logger("localhost", 24224);
+  fluent::Message *msg = logger->retain_message();
   logger->emit(msg, "test.basic");
   std::string tag, ts, rec;
   get_line(&tag, &ts, &rec);
@@ -142,18 +142,18 @@ TEST(Logger, basic) {
   /*
   FILE *fp;
   char buf[BUFSIZ];
-  std::string cmd("fluentd -q --no-supervisor -c test/fluentd.conf");
+  std::string cmd("fluent -q --no-supervisor -c test/fluent.conf");
 
   fp = popen(cmd.c_str(), "r");
 
   if (fp == NULL) {
-    std::cout << "ERROR: Logger test requires fluentd." << std::endl;
+    std::cout << "ERROR: Logger test requires fluent." << std::endl;
     std::cout << strerror(errno) << std::endl;
     ASSERT_TRUE(false);
   }
 
 
-  fluentd::Logger *logger = new fluentd::Logger();
+  fluent::Logger *logger = new fluent::Logger();
   const size_t retry_max = 5;
   for (size_t i = 0; i < retry_max; i++) {
     if(logger->set_dest("localhost", "24224")) {
@@ -166,7 +166,7 @@ TEST(Logger, basic) {
   EXPECT_TRUE(logger->has_dest());
   
   if (logger->has_dest()) {
-    fluentd::Message *msg = logger->retain_message();
+    fluent::Message *msg = logger->retain_message();
     logger->emit(msg, "test.basic");
 
     EXPECT_TRUE(NULL != fgets(buf, BUFSIZ, fp));

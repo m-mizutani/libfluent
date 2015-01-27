@@ -37,11 +37,11 @@
 #include <errno.h>
 #include <signal.h>
 
-#include "./fluentd/socket.hpp"
+#include "./fluent/socket.hpp"
 #include "./debug.h"
 
 
-namespace fluentd {
+namespace fluent {
   Socket::Socket(const std::string &host, const std::string &port) :
     host_(host), port_(port){
     signal(SIGPIPE, SIG_IGN);

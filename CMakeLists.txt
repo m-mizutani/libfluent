@@ -1,5 +1,5 @@
 CMAKE_MINIMUM_REQUIRED(VERSION 2.6)
-PROJECT(libfluentd)
+PROJECT(libfluent)
 
 
 SET(CMAKE_CXX_FLAGS_RELEASE "-Wall -O3 -std=c++0x")
@@ -18,15 +18,15 @@ LINK_DIRECTORIES(${LIB_DIR})
 
 FILE(GLOB BASESRCS "src/*.cc" "src/*.hpp")
 FILE(GLOB TESTSRCS "test/*.cc")
-FILE(GLOB HEADERS "src/fluentd/*.hpp")
+FILE(GLOB HEADERS "src/fluent/*.hpp")
 
-ADD_LIBRARY(fluentd SHARED ${BASESRCS})
-TARGET_LINK_LIBRARIES(fluentd msgpack)
+ADD_LIBRARY(fluent SHARED ${BASESRCS})
+TARGET_LINK_LIBRARIES(fluent msgpack)
 
-ADD_EXECUTABLE(fluentd-test ${TESTSRCS})
-TARGET_LINK_LIBRARIES(fluentd-test fluentd)
+ADD_EXECUTABLE(fluent-test ${TESTSRCS})
+TARGET_LINK_LIBRARIES(fluent-test fluent)
 
-INSTALL(FILES src/fluentd.hpp DESTINATION include/)
-INSTALL(FILES ${HEADERS} DESTINATION include/fluentd)
+INSTALL(FILES src/fluent.hpp DESTINATION include/)
+INSTALL(FILES ${HEADERS} DESTINATION include/fluent)
 
 

@@ -24,13 +24,13 @@
  * POSSIBILITY OF SUCH DAMAGE.
  */
 
-#ifndef __FLUENTD_LOGGER_HPP__
-#define __FLUENTD_LOGGER_HPP__
+#ifndef __FLUENT_LOGGER_HPP__
+#define __FLUENT_LOGGER_HPP__
 
 #include <set>
 #include <string>
 
-namespace fluentd {
+namespace fluent {
   class Message;
   class Socket;
   
@@ -56,4 +56,4 @@ namespace fluentd {
 }
 
 
-#endif   // __SRC_FLUENTD_LOGGER_H__
+#endif   // __SRC_FLUENT_LOGGER_H__

@@ -24,10 +24,7 @@
  * POSSIBILITY OF SUCH DAMAGE.
  */
 
-#ifndef __FLUENTD_HPP__
-#define __FLUENTD_HPP__
+#include "./fluent.hpp"
 
-#include "./fluentd/logger.hpp"
-#include "./fluentd/message.hpp"
-
-#endif
+namespace fluent {
+}

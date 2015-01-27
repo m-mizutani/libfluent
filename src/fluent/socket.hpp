@@ -24,7 +24,28 @@
  * POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include "./fluentd.hpp"
+#ifndef __FLUENT_SOCKET_HPP__
+#define __FLUENT_SOCKET_HPP__
 
-namespace fluentd {
+#include <string>
+
+namespace fluent {
+  class Socket {
+  private:
+    int sock_;
+    std::string host_;
+    std::string port_;
+    std::string errmsg_;
+    
+  public:
+    Socket(const std::string &host, const std::string &port);
+    ~Socket();
+    bool connect();
+    bool send(void *data, size_t len);
+    const std::string& errmsg() const { return this->errmsg_; }
+  };
+
 }
+
+
+#endif   // __SRC_FLUENT_SOCKET_H__

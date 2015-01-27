@@ -24,10 +24,10 @@
  * POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include "./fluentd/message.hpp"
+#include "./fluent/message.hpp"
 #include "./debug.h"
 
-namespace fluentd {
+namespace fluent {
   Message::Message() {
   };
   Message::~Message() {

@@ -26,10 +26,10 @@
 
 #include <string.h>
 #include "./gtest.h"
-#include "../src/fluentd/message.hpp"
+#include "../src/fluent/message.hpp"
 
 TEST(Message, basic) {
-  fluentd::Message::Map *obj = new fluentd::Message::Map();
+  fluent::Message::Map *obj = new fluent::Message::Map();
   msgpack::sbuffer sbuf;
   msgpack::packer<msgpack::sbuffer> pkr(&sbuf);
 
@@ -48,7 +48,7 @@ TEST(Message, basic) {
 }
 
 TEST(Message, Map) {
-  fluentd::Message::Map *obj = new fluentd::Message::Map();
+  fluent::Message::Map *obj = new fluent::Message::Map();
   msgpack::sbuffer sbuf;
   msgpack::packer<msgpack::sbuffer> pkr(&sbuf);
 
@@ -78,7 +78,7 @@ TEST(Message, Map) {
 }
 
 TEST(Message, Array) {
-  fluentd::Message::Array *obj = new fluentd::Message::Array();
+  fluent::Message::Array *obj = new fluent::Message::Array();
   msgpack::sbuffer sbuf;
   msgpack::packer<msgpack::sbuffer> pkr(&sbuf);
 
