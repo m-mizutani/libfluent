@@ -84,11 +84,6 @@ namespace fluent {
                     rp->ai_addrlen);
 
         debug(DBG, "connected to %s", buf);
-        /*
-        int optval = 1;
-        setsockopt(this->sock_, SOL_SOCKET, SO_NOSIGPIPE,
-                   (void *)&optval, sizeof(int));
-        */        
         break;
       }
     }

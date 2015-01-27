@@ -74,16 +74,11 @@ protected:
     
     pid_t pid = fork();
     if (pid == 0) {
-      // Child
-      /*
-      char *const args[6] = {
-        "fluent",
-        "-q", "--no-supervisor",
-        "-c", "test/fluent.conf", NULL};
-      */
-      std::vector<std::string> arg = {"fluentd",
-                                      "-q", "--no-supervisor",
-                                      "-c", "test/fluentd.conf"};
+      // Running as child.
+      std::vector<std::string> arg = {
+        "fluentd", "-q", "--no-supervisor", "-c", "test/fluentd.conf"
+      };
+        
       char **argv = new char*[arg.size() + 1];
       for (size_t i = 0; i < arg.size(); i++) {
         argv[i] = const_cast<char*>(arg[i].c_str());
@@ -98,6 +93,7 @@ protected:
         perror("execvp");        
       }
     } else {
+      // Running as parent.
       this->pid_ = pid;
       this->pipe_fd_ = pipe_c2p[RP];
       this->pipe_ = fdopen(this->pipe_fd_, "r");
@@ -111,6 +107,7 @@ protected:
     int rc = waitpid(this->pid_, &stat, 0);
     ASSERT_EQ(this->pid_, rc);
     this->pid_ = 0;
+    close(this->pipe_fd_);
     // EXPECT_TRUE(WIFSTOPPED(stat));
   }
   

@@ -68,7 +68,7 @@ namespace fluent {
       }      
       int wait_msec = random() % wait_msec_max;
       
-      debug(true, "reconnect after %d msec...", wait_msec);
+      debug(false, "reconnect after %d msec...", wait_msec);
       usleep(wait_msec * 1000);
     }
     
