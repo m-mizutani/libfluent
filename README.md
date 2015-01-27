@@ -38,7 +38,7 @@ Functions
 - Support array in message such as `{"a": [1, 2, 3]}`
 - Support multithread buffering (under development)
 - Reconnect when disconnected (under development)
-- Exponential backoff (under development)
+- Exponential backoff for reconnect
 
 Author
 --------------

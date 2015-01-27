@@ -42,6 +42,7 @@ namespace fluentd {
     Socket *sock_;
     size_t retry_max_;
     std::string errmsg_;
+    static const int WAIT_MAX;
     
   public:
     Logger(const std::string &host, int port);

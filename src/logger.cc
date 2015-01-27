@@ -36,6 +36,7 @@
 #include "./debug.h"
 
 namespace fluentd {
+  const int Logger::WAIT_MAX = 120 * 1000;
   Logger::Logger(const std::string &host, int port) :
     host_(host),
     port_(port),
@@ -56,12 +57,19 @@ namespace fluentd {
     std::stringstream ss;
     ss << this->port_;
     this->sock_ = new Socket(this->host_, ss.str());
-    for (size_t i = 0; i < this->retry_max_; i++) {
+    for (size_t i = 0; this->retry_max_ == 0 || i < this->retry_max_; i++) {
       if (this->sock_->connect()) {
         return true;
       }
-      double dur = pow(1.5, static_cast<double>(i + 1));
-      usleep(static_cast<int>(dur * 1000000));
+      int wait_msec_max =
+        static_cast<int>(pow(2, static_cast<double>(i)) * 1000);
+      if (wait_msec_max > WAIT_MAX) {
+        wait_msec_max = WAIT_MAX;
+      }      
+      int wait_msec = random() % wait_msec_max;
+      
+      debug(true, "reconnect after %d msec...", wait_msec);
+      usleep(wait_msec * 1000);
     }
     
     this->errmsg_ = this->sock_->errmsg();
