@@ -10,7 +10,10 @@ to fluentd daemon directly.
 int main(int argc, char *argv[]) {
   fluent::Logger *logger = new fluent::Logger("localhost", 24224);
 	  
-  // Emit ["tag.http", 1422315xxx, {"url": "http://github.com", "port": 443}]
+  // Emit log:
+  //  tag: "tag.http"
+  //  time: 1422315xxx (auto)
+  //  data: {"url": "http://github.com", "port": 443}
   fluent::Message *msg = logger->retain_message("tag.http");
   msg->set("url", "http://github.com");
   msg->set("port", 443);
