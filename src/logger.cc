@@ -51,14 +51,14 @@ namespace fluent {
     }
   }
 
-  Message* Logger::retain_message() {
-    Message *msg = new Message();
+  Message* Logger::retain_message(const std::string &tag) {
+    Message *msg = new Message(tag);
     this->msg_set_.insert(msg);
     return msg;
   }
 
 
-  bool Logger::emit(Message *msg, const std::string &tag, time_t ts) {
+  bool Logger::emit(Message *msg) {
     if (this->msg_set_.find(msg) == this->msg_set_.end()) {
       this->errmsg_ = "invalid Message instance, "
         "should be got by Logger::retain_message()";

@@ -24,18 +24,43 @@
  * POSSIBILITY OF SUCH DAMAGE.
  */
 
+#include <time.h>
 #include "./fluent/message.hpp"
 #include "./debug.h"
 
 namespace fluent {
-  Message::Message() {
+  Message::Message(const std::string &tag) : tag_(tag) {
+    this->ts_ = time(nullptr);
   };
   Message::~Message() {
   }
+
+  void Message::set_ts(time_t ts) {
+    this->ts_ = ts;
+  }
+  
   void Message::to_msgpack(msgpack::packer<msgpack::sbuffer> *pk) const {
-    this->root_.to_msgpack(pk);
+    return this->root_.to_msgpack(pk);
   }
 
+  bool Message::set(const std::string &key, const std::string &val) {
+    return this->root_.set(key, val);
+  }
+  bool Message::set(const std::string &key, const char *val){
+    return this->root_.set(key, val);
+  }
+  bool Message::set(const std::string &key, int val){
+    return this->root_.set(key, val);
+  }
+  bool Message::set(const std::string &key, double val){
+    return this->root_.set(key, val);
+  }
+  bool Message::set(const std::string &key, bool val){
+    return this->root_.set(key, val);
+  }
+  bool Message::del(const std::string &key){
+    return this->root_.del(key);
+  }
   
   const bool Message::Map::DBG(false);
   Message::Map::Map() {
@@ -109,6 +134,18 @@ namespace fluent {
       // Already exists
       return false;
     }
+  }
+  bool Message::Map::del(const std::string &key) {
+    auto it = this->map_.find(key);
+    if (it != this->map_.end()) {
+      // Create and insert value
+      delete it->second;
+      this->map_.erase(key);
+      return true;
+    } else {
+      // Not exists.
+      return false;
+    }    
   }
 
   void Message::Map::to_msgpack(msgpack::packer<msgpack::sbuffer> *pk)

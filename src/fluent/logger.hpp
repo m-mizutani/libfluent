@@ -49,8 +49,8 @@ namespace fluent {
     Logger(const std::string &host, int port);
     ~Logger();
     bool connect();
-    Message* retain_message();
-    bool emit(Message *msg, const std::string &tag, time_t ts=0);
+    Message* retain_message(const std::string &tag);
+    bool emit(Message *msg);
   };
 
 }

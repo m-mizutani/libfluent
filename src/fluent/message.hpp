@@ -34,10 +34,19 @@ namespace fluent {
   class Message {
     
   public:
-    Message();
+    Message(const std::string &tag);
     ~Message();
     void set_ts(time_t ts);
+    time_t ts() const { return this->ts_; }
+    const std::string& tag() const { return this->tag_; }
+    
     void to_msgpack(msgpack::packer<msgpack::sbuffer> *pk) const;
+    bool set(const std::string &key, const std::string &val);
+    bool set(const std::string &key, const char *val);
+    bool set(const std::string &key, int val);
+    bool set(const std::string &key, double val);
+    bool set(const std::string &key, bool val);
+    bool del(const std::string &key);
 
     class Object {
     public:
@@ -117,6 +126,7 @@ namespace fluent {
 
   private:    
     time_t ts_;
+    std::string tag_;
     Map root_;
 
   };

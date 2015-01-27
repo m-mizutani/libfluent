@@ -34,6 +34,7 @@
 
 #include "./gtest.h"
 #include "../src/fluent/logger.hpp"
+#include "../src/fluent/message.hpp"
 
 #include "../src/debug.h"
 
@@ -127,12 +128,25 @@ protected:
 
 TEST_F(FluentTest, Logger) {
   fluent::Logger *logger = new fluent::Logger("localhost", 24224);
-  fluent::Message *msg = logger->retain_message();
-  logger->emit(msg, "test.basic");
+  fluent::Message *msg = logger->retain_message("test.basic");
+  logger->emit(msg);
   std::string tag, ts, rec;
   get_line(&tag, &ts, &rec);
   EXPECT_EQ(tag, "test.basic");
   EXPECT_EQ(rec, "{}");
+}
+
+TEST_F(FluentTest, Message) {
+  fluent::Logger *logger = new fluent::Logger("localhost", 24224);
+  const std::string tag = "test.http";
+  fluent::Message *msg = logger->retain_message(tag);
+  msg->set("url", "https://github.com");
+  msg->set("port", 443);
+  logger->emit(msg);
+  std::string res_tag, res_ts, res_rec;
+  get_line(&res_tag, &res_ts, &res_rec);
+  EXPECT_EQ(res_tag, tag);
+  EXPECT_EQ(res_rec, "{\"port\":443,\"url\":\"https://github.com\"}");
 }
 
 TEST(Logger, basic) {
