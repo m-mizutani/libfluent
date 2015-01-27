@@ -129,18 +129,7 @@ protected:
 };
 
 TEST_F(FluentdTest, Logger) {
-  fluentd::Logger *logger = new fluentd::Logger();
-  const size_t retry_max = 5;
-  for (size_t i = 0; i < retry_max; i++) {
-    if(logger->set_dest("localhost", "24224")) {
-      break;
-    } else {
-      sleep(1);
-    }
-  }
-
-  ASSERT_TRUE(logger->has_dest());
-  
+  fluentd::Logger *logger = new fluentd::Logger("localhost", 24224);
   fluentd::Message *msg = logger->retain_message();
   logger->emit(msg, "test.basic");
   std::string tag, ts, rec;

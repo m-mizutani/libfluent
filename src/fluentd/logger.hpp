@@ -37,14 +37,17 @@ namespace fluentd {
   class Logger {
   private:
     std::set<Message*> msg_set_;
+    std::string host_;
+    int port_;
     Socket *sock_;
+    size_t retry_max_;
     std::string errmsg_;
     
   public:
-    Logger();
+    Logger(const std::string &host, int port);
     ~Logger();
-    bool set_dest(const std::string &host, const std::string &port);
-    bool has_dest() const;
+    bool connect();
+    bool is_connected() const { return (this->sock_ != NULL); }
     Message* retain_message();
     bool emit(Message *msg, const std::string &tag, time_t ts=0);
   };

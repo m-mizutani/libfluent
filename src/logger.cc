@@ -24,13 +24,24 @@
  * POSSIBILITY OF SUCH DAMAGE.
  */
 
+#include <sstream>
 #include <sys/time.h>
+#include <time.h>
+#include <math.h>
+#include <unistd.h>
+
 #include "./fluentd/logger.hpp"
 #include "./fluentd/socket.hpp"
 #include "./fluentd/message.hpp"
+#include "./debug.h"
 
 namespace fluentd {
-  Logger::Logger() : sock_(nullptr) {
+  Logger::Logger(const std::string &host, int port) :
+    host_(host),
+    port_(port),
+    sock_(nullptr),
+    retry_max_(20)
+  {
   }
   Logger::~Logger() {
   }
@@ -41,26 +52,32 @@ namespace fluentd {
     return msg;
   }
 
-  bool Logger::set_dest(const std::string &host, const std::string &port) {
-    this->sock_ = new Socket(host, port);
-    if (this->sock_->connect()) {
-      return true;
-    } else {
-      this->errmsg_ = this->sock_->errmsg();
-      delete this->sock_;
-      this->sock_ = nullptr;
-      return false;
+  bool Logger::connect() {
+    std::stringstream ss;
+    ss << this->port_;
+    this->sock_ = new Socket(this->host_, ss.str());
+    for (size_t i = 0; i < this->retry_max_; i++) {
+      if (this->sock_->connect()) {
+        return true;
+      }
+      double dur = pow(1.5, static_cast<double>(i + 1));
+      usleep(static_cast<int>(dur * 1000000));
     }
-  }
-
-  bool Logger::has_dest() const {
-    return (this->sock_ != NULL);
+    
+    this->errmsg_ = this->sock_->errmsg();
+    delete this->sock_;
+    this->sock_ = nullptr;
+    return false;
   }
 
   bool Logger::emit(Message *msg, const std::string &tag, time_t ts) {
     if (this->msg_set_.find(msg) == this->msg_set_.end()) {
       this->errmsg_ = "invalid Message instance, "
         "should be got by Logger::retain_message()";
+      return false;
+    }
+
+    if (!this->sock_ && !this->connect()) {
       return false;
     }
 
