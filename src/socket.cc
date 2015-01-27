@@ -43,7 +43,7 @@
 
 namespace fluent {
   Socket::Socket(const std::string &host, const std::string &port) :
-    host_(host), port_(port){
+    host_(host), port_(port), is_connected_(false) {
     signal(SIGPIPE, SIG_IGN);
   }
   Socket::~Socket() {
@@ -83,6 +83,7 @@ namespace fluent {
         ::inet_ntop(rp->ai_family, &addr_in->sin_addr.s_addr, buf,
                     rp->ai_addrlen);
 
+        this->is_connected_ = true;
         debug(DBG, "connected to %s", buf);
         break;
       }
@@ -99,6 +100,7 @@ namespace fluent {
   bool Socket::send(void *data, size_t len) {
     if (0 > ::write(this->sock_, data, len)) {
       this->errmsg_.assign(strerror(errno));
+      this->is_connected_ = false;
       return false;
     }
     return true;

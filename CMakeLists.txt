@@ -21,7 +21,7 @@ FILE(GLOB TESTSRCS "test/*.cc")
 FILE(GLOB HEADERS "src/fluent/*.hpp")
 
 ADD_LIBRARY(fluent SHARED ${BASESRCS})
-TARGET_LINK_LIBRARIES(fluent msgpack)
+TARGET_LINK_LIBRARIES(fluent msgpack pthread)
 
 ADD_EXECUTABLE(fluent-test ${TESTSRCS})
 TARGET_LINK_LIBRARIES(fluent-test fluent)

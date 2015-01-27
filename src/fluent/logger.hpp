@@ -33,13 +33,14 @@
 namespace fluent {
   class Message;
   class Socket;
-  
+  class Emitter;
+
   class Logger {
   private:
     std::set<Message*> msg_set_;
     std::string host_;
     int port_;
-    Socket *sock_;
+    Emitter *emitter_;
     size_t retry_max_;
     std::string errmsg_;
     static const int WAIT_MAX;
@@ -48,7 +49,6 @@ namespace fluent {
     Logger(const std::string &host, int port);
     ~Logger();
     bool connect();
-    bool is_connected() const { return (this->sock_ != NULL); }
     Message* retain_message();
     bool emit(Message *msg, const std::string &tag, time_t ts=0);
   };

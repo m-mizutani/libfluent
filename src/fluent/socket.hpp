@@ -36,11 +36,13 @@ namespace fluent {
     std::string host_;
     std::string port_;
     std::string errmsg_;
+    bool is_connected_;
     
   public:
     Socket(const std::string &host, const std::string &port);
     ~Socket();
     bool connect();
+    bool is_connected() const { return this->is_connected_; }
     bool send(void *data, size_t len);
     const std::string& errmsg() const { return this->errmsg_; }
   };

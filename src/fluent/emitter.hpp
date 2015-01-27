@@ -24,51 +24,38 @@
  * POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include <sstream>
-#include <sys/time.h>
-#include <time.h>
-#include <math.h>
-#include <unistd.h>
+#ifndef __FLUENT_EMITTER_HPP__
+#define __FLUENT_EMITTER_HPP__
 
-#include "./fluent/logger.hpp"
-#include "./fluent/message.hpp"
-#include "./fluent/emitter.hpp"
-#include "./debug.h"
+#include <string>
+#include <pthread.h>
+#include "./socket.hpp"
+#include "./message.hpp"
 
 namespace fluent {
-  const int Logger::WAIT_MAX = 120 * 1000;
-  Logger::Logger(const std::string &host, int port) :
-    host_(host),
-    port_(port),
-    retry_max_(20)
-  {
-    this->emitter_ = new Emitter(host, port);
-  }
-  Logger::~Logger() {
-    // delete not used messages.
-    for (auto it = this->msg_set_.begin(); it != this->msg_set_.end(); it++) {
-      delete *it;
-    }
-  }
+  class Emitter {
+  private:
+    static const int WAIT_MAX;
 
-  Message* Logger::retain_message() {
-    Message *msg = new Message();
-    this->msg_set_.insert(msg);
-    return msg;
-  }
-
-
-  bool Logger::emit(Message *msg, const std::string &tag, time_t ts) {
-    if (this->msg_set_.find(msg) == this->msg_set_.end()) {
-      this->errmsg_ = "invalid Message instance, "
-        "should be got by Logger::retain_message()";
-      return false;
-    }
-
-    this->msg_set_.erase(msg);
-    this->emitter_->emit(msg);
+    Socket *sock_;
+    pthread_t th_;
+    pthread_mutex_t mutex_;
+    pthread_cond_t cond_;
+    Message *msg_buf_;
+    size_t retry_max_;
+    std::string errmsg_;
     
-    return true;
-  }
-
+    static void* run_thread(void *obj);
+    void loop();
+    bool connect();
+    
+  public:
+    Emitter(const std::string &host, int port);
+    ~Emitter();
+    bool emit(Message *msg);
+    const std::string& errmsg() const { return this->errmsg_; }
+  };
 }
+
+
+#endif   // __SRC_FLUENT_EMITTER_H__
