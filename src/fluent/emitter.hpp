@@ -33,6 +33,29 @@
 #include "./message.hpp"
 
 namespace fluent {
+  class MsgBuffer {
+  private:
+    std::deque<Message*> buf_;
+
+  public:
+    MsgBuffer();
+    ~MsgBuffer();
+    void push(Message *msg);
+    Message *pull();
+  };
+
+  class MsgQueue {
+  private:
+    size_t buf_target_;
+    MsgBuffer buf_[2];
+
+  public:
+    MsgQueue();
+    ~MsgQueue();
+    void push(Message *msg);
+    MsgBuffer *switch_buffer();
+  };
+
   class Emitter {
   private:
     static const int WAIT_MAX;
@@ -44,17 +67,19 @@ namespace fluent {
     Message *msg_buf_;
     size_t retry_max_;
     std::string errmsg_;
-    
+
     static void* run_thread(void *obj);
     void loop();
     bool connect();
-    
+
   public:
     Emitter(const std::string &host, int port);
     ~Emitter();
     bool emit(Message *msg);
     const std::string& errmsg() const { return this->errmsg_; }
   };
+
+
 }
 
 

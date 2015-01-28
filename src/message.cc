@@ -213,5 +213,4 @@ namespace fluent {
     const {
     pk->pack(this->val_);
   }  
-    
 }

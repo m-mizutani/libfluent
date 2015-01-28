@@ -130,7 +130,6 @@ namespace fluent {
     Map root_;
 
   };
-
 }
 
 

@@ -53,10 +53,10 @@ namespace fluent {
     ::pthread_cancel(this->th_);
     ::pthread_join(this->th_, NULL);
   }
-  
+
   bool Emitter::emit(Message *msg) {
     static const bool DBG = false;
-    
+
     bool rc = true;
     ::pthread_mutex_lock (&(this->mutex_));
     debug(DBG, "entered lock");
@@ -86,17 +86,17 @@ namespace fluent {
         wait_msec_max = WAIT_MAX;
       }
       int wait_msec = random() % wait_msec_max;
-      
+
       debug(DBG, "reconnect after %d msec...", wait_msec);
       usleep(wait_msec * 1000);
     }
-    
+
     this->errmsg_ = this->sock_->errmsg();
     delete this->sock_;
     this->sock_ = nullptr;
     return false;
   }
-  
+
   void* Emitter::run_thread(void *obj) {
     Emitter *emitter = static_cast<Emitter*>(obj);
     emitter->loop();
@@ -105,7 +105,7 @@ namespace fluent {
 
   void Emitter::loop() {
     const bool DBG = false;
-    
+
     while (true) {
       Message *msg;
       debug(DBG, "entering lock");
@@ -125,7 +125,7 @@ namespace fluent {
       if (!this->sock_->is_connected()) {
         this->connect(); // TODO: handle failure of retry
       }
-      
+
       if (msg) {
         msgpack::sbuffer buf;
         msgpack::packer <msgpack::sbuffer> pk(&buf);
@@ -142,4 +142,40 @@ namespace fluent {
       }
     }
   }
+
+  MsgBuffer::MsgBuffer() {
+  }
+  MsgBuffer::~MsgBuffer() {
+    // Delete not emitted messages.
+    for (auto it = this->buf_.begin(); it != this->buf_.end(); it++) {
+      delete (*it);
+    }
+  }
+  void MsgBuffer::push(Message *msg) {
+    this->buf_.push_back(msg);
+  }
+  Message* MsgBuffer::pull() {
+    if (this->buf_.size() == 0) {
+      return nullptr;
+    } else {
+      Message *msg = this->buf_.front();
+      this->buf_.pop_front();
+      return msg;
+    }
+  }
+
+  MsgQueue::MsgQueue() : buf_target_(0) {
+  }
+  MsgQueue::~MsgQueue() {
+  }
+  void MsgQueue::push(Message *msg) {
+    this->buf_[this->buf_target_].push(msg);
+  }
+  MsgBuffer *MsgQueue::switch_buffer() {
+    MsgBuffer *buf = &(this->buf_[this->buf_target_]);
+    this->buf_target_ = (this->buf_target_ + 1) & 1;
+    return buf;
+  }
+
+
 }
