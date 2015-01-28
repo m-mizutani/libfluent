@@ -51,6 +51,7 @@ namespace fluent {
     bool connect();
     Message* retain_message(const std::string &tag);
     bool emit(Message *msg);
+    const std::string& errmsg() const { return this->errmsg_; }
   };
 
 }

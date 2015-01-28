@@ -29,4 +29,5 @@ TARGET_LINK_LIBRARIES(fluent-test fluent)
 INSTALL(FILES src/fluent.hpp DESTINATION include/)
 INSTALL(FILES ${HEADERS} DESTINATION include/fluent)
 
-
+ADD_EXECUTABLE(fluent-bench tools/fluent-bench.cc)
+TARGET_LINK_LIBRARIES(fluent-bench fluent)
