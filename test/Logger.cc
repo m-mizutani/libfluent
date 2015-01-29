@@ -149,6 +149,29 @@ TEST_F(FluentTest, Message) {
   EXPECT_EQ(res_rec, "{\"port\":443,\"url\":\"https://github.com\"}");
 }
 
+/*
+TEST_F(FluentTest, Fail) {
+  fluent::Logger *logger = new fluent::Logger("localhost", 24224);
+  const std::string tag = "test.http";
+
+  fluent::Message *msg = logger->retain_message(tag);
+  msg->set("url", "https://github.com");
+  msg->set("port", 443);
+  logger->emit(msg);
+  std::string res_tag, res_ts, res_rec;
+  get_line(&res_tag, &res_ts, &res_rec);
+  EXPECT_EQ(res_tag, tag);
+  EXPECT_EQ(res_rec, "{\"port\":443,\"url\":\"https://github.com\"}");
+  this->stop_fluent();
+
+  msg = logger->retain_message(tag);
+  msg->set("url", "https://github.com");
+  msg->set("port", 443);
+  EXPECT_FALSE(logger->emit(msg));
+
+}
+*/
+
 TEST(Logger, basic) {
   /*
   FILE *fp;

@@ -25,6 +25,7 @@
  */
 
 #include <sstream>
+#include <iostream>
 #include <math.h>
 #include <unistd.h>
 #include <msgpack.hpp>
@@ -36,46 +37,32 @@ namespace fluent {
   const int Emitter::WAIT_MAX = 120 * 1000;
 
   Emitter::Emitter(const std::string &host, int port) :
-    msg_buf_(nullptr), retry_max_(0)
+    retry_limit_(0)
   {
     // Setup socket.
     std::stringstream ss;
     ss << port;
     this->sock_ = new Socket(host, ss.str());
 
-    // Setup pthread.
-    ::pthread_mutex_init(&(this->mutex_), NULL);
-    ::pthread_cond_init(&(this->cond_), NULL);
-    ::pthread_create(&(this->th_), NULL, Emitter::run_thread, this);
+    ::pthread_create(&(this->th_), NULL, Emitter::run_thread, this);    
   }
 
   Emitter::~Emitter() {
-    ::pthread_cancel(this->th_);
-    ::pthread_join(this->th_, NULL);
   }
 
   bool Emitter::emit(Message *msg) {
     static const bool DBG = false;
 
+    this->queue_.push(msg);
     bool rc = true;
-    ::pthread_mutex_lock (&(this->mutex_));
-    debug(DBG, "entered lock");
-    if (this->msg_buf_) {
-      rc = false;
-    } else {
-      this->msg_buf_ = msg;
-    }
-    debug(DBG, "send signal");
-    ::pthread_cond_signal (&(this->cond_));
-    ::pthread_mutex_unlock (&(this->mutex_));
-    debug(DBG, "left lock");
     return rc;
   }
 
   bool Emitter::connect() {
     static const bool DBG = false;
 
-    for (size_t i = 0; this->retry_max_ == 0 || i < this->retry_max_; i++) {
+    for (size_t i = 0; this->retry_limit_ == 0 || i < this->retry_limit_;
+         i++) {
       if (this->sock_->connect()) {
         debug(DBG, "connected");
         return true;
@@ -107,20 +94,7 @@ namespace fluent {
     const bool DBG = false;
 
     while (true) {
-      Message *msg;
-      debug(DBG, "entering lock");
-      ::pthread_mutex_lock(&(this->mutex_));
-      debug(DBG, "entered lock");
-      if (this->msg_buf_ == nullptr) {
-        debug(DBG, "entered wait");
-        ::pthread_cond_wait(&(this->cond_), &(this->mutex_));
-        debug(DBG, "left wait");
-      }
-
-      msg = this->msg_buf_;
-      this->msg_buf_ = nullptr;
-      ::pthread_mutex_unlock(&(this->mutex_));
-      debug(DBG, "left lock");
+      Message *msg = this->queue_.pop();
 
       if (!this->sock_->is_connected()) {
         this->connect(); // TODO: handle failure of retry
@@ -135,6 +109,7 @@ namespace fluent {
         msg->to_msgpack(&pk);
 
         while(!this->sock_->send(buf.data(), buf.size())) {
+          std::cerr << "socket error: " << this->sock_->errmsg() << std::endl;
           this->connect(); // TODO: handle failure of retry
         }
 
@@ -143,39 +118,49 @@ namespace fluent {
     }
   }
 
-  MsgBuffer::MsgBuffer() {
-  }
-  MsgBuffer::~MsgBuffer() {
-    // Delete not emitted messages.
-    for (auto it = this->buf_.begin(); it != this->buf_.end(); it++) {
-      delete (*it);
-    }
-  }
-  void MsgBuffer::push(Message *msg) {
-    this->buf_.push_back(msg);
-  }
-  Message* MsgBuffer::pull() {
-    if (this->buf_.size() == 0) {
-      return nullptr;
-    } else {
-      Message *msg = this->buf_.front();
-      this->buf_.pop_front();
-      return msg;
-    }
-  }
-
-  MsgQueue::MsgQueue() : buf_target_(0) {
+  MsgQueue::MsgQueue() : msg_head_(nullptr), msg_tail_(nullptr) {
+    // Setup pthread.
+    ::pthread_mutex_init(&(this->mutex_), NULL);
+    ::pthread_cond_init(&(this->cond_), NULL);
   }
   MsgQueue::~MsgQueue() {
   }
-  void MsgQueue::push(Message *msg) {
-    this->buf_[this->buf_target_].push(msg);
+  bool MsgQueue::push(Message *msg) {
+    static const bool DBG = false;
+    bool rc = true;
+    ::pthread_mutex_lock (&(this->mutex_));
+    debug(DBG, "entered lock");
+    if (this->msg_head_) {
+      rc = false;
+    } else {
+      this->msg_head_ = msg;
+    }
+    debug(DBG, "send signal");
+    ::pthread_cond_signal (&(this->cond_));
+    ::pthread_mutex_unlock (&(this->mutex_));
+    debug(DBG, "left lock");
+    return true;
   }
-  MsgBuffer *MsgQueue::switch_buffer() {
-    MsgBuffer *buf = &(this->buf_[this->buf_target_]);
-    this->buf_target_ = (this->buf_target_ + 1) & 1;
-    return buf;
-  }
+  Message* MsgQueue::pop() {
+    static const bool DBG = false;
+    Message *msg;
+    
+    debug(DBG, "entering lock");
+    ::pthread_mutex_lock(&(this->mutex_));
+    debug(DBG, "entered lock");
 
+    if (this->msg_head_ == nullptr) {
+      debug(DBG, "entered wait");
+      ::pthread_cond_wait(&(this->cond_), &(this->mutex_));
+      debug(DBG, "left wait");
+    }
+
+    msg = this->msg_head_;
+    this->msg_head_ = nullptr;
+    ::pthread_mutex_unlock(&(this->mutex_));
+    debug(DBG, "left lock");
+
+    return msg;
+  }
 
 }

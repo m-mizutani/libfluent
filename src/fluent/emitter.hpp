@@ -33,27 +33,18 @@
 #include "./message.hpp"
 
 namespace fluent {
-  class MsgBuffer {
-  private:
-    std::deque<Message*> buf_;
-
-  public:
-    MsgBuffer();
-    ~MsgBuffer();
-    void push(Message *msg);
-    Message *pull();
-  };
-
   class MsgQueue {
   private:
-    size_t buf_target_;
-    MsgBuffer buf_[2];
-
+    pthread_mutex_t mutex_;
+    pthread_cond_t cond_;
+    Message *msg_head_;
+    Message *msg_tail_;
+    
   public:
     MsgQueue();
     ~MsgQueue();
-    void push(Message *msg);
-    MsgBuffer *switch_buffer();
+    bool push(Message *msg);
+    Message *pop();
   };
 
   class Emitter {
@@ -62,12 +53,11 @@ namespace fluent {
 
     Socket *sock_;
     pthread_t th_;
-    pthread_mutex_t mutex_;
-    pthread_cond_t cond_;
     Message *msg_buf_;
-    size_t retry_max_;
+    size_t retry_limit_;
     std::string errmsg_;
-
+    MsgQueue queue_;
+    
     static void* run_thread(void *obj);
     void loop();
     bool connect();

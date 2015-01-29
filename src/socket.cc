@@ -99,9 +99,9 @@ namespace fluent {
   }
   bool Socket::send(void *data, size_t len) {
     if (0 > ::write(this->sock_, data, len)) {
-      ::close(this->sock_);
       this->errmsg_.assign(strerror(errno));
       this->is_connected_ = false;
+      ::close(this->sock_);
       return false;
     }
     return true;
