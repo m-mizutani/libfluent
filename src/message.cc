@@ -29,24 +29,17 @@
 #include "./debug.h"
 
 namespace fluent {
-  Message::Message(const std::string &tag) : tag_(tag) {
+  Message::Message(const std::string &tag) : tag_(tag), next_(nullptr) {
     this->ts_ = time(nullptr);
   };
   Message::~Message() {
+    delete this->next_;
   }
 
   void Message::set_ts(time_t ts) {
     this->ts_ = ts;
   }
   
-  void Message::to_msgpack(msgpack::packer<msgpack::sbuffer> *pk) const {
-    pk->pack_array(3);           // [?, ?, ?]
-    pk->pack(this->tag_);       // [tag, ?, ?]
-    pk->pack(this->ts_);        // [tag, timestamp, ?]
-    this->root_.to_msgpack(pk);
-    return ;
-  }
-
   bool Message::set(const std::string &key, const std::string &val) {
     return this->root_.set(key, val);
   }
@@ -65,6 +58,29 @@ namespace fluent {
   bool Message::del(const std::string &key){
     return this->root_.del(key);
   }
+
+  void Message::to_msgpack(msgpack::packer<msgpack::sbuffer> *pk) const {
+    pk->pack_array(3);          // [?, ?, ?]
+    pk->pack(this->tag_);       // [tag, ?, ?]
+    pk->pack(this->ts_);        // [tag, timestamp, ?]
+    this->root_.to_msgpack(pk);
+    return ;
+  }
+
+  void Message::attach(Message *next) {
+    assert(this->next_ == nullptr);
+    this->next_ = next;
+  }
+  Message* detach() {
+    Message *m = this->next_;
+    if (this->next_) {
+      this->next_ = nullptr;
+    }
+    return m;
+  }
+
+
+
   
   const bool Message::Map::DBG(false);
   Message::Map::Map() {
@@ -161,7 +177,6 @@ namespace fluent {
       (it->second)->to_msgpack(pk);
     }
   }
-
 
 
   void Message::Array::push(const std::string &val) {
