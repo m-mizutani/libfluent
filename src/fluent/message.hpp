@@ -32,22 +32,36 @@
 
 namespace fluent {
   class Message {
+    class Array;
+    class Map;
     
   public:
     Message(const std::string &tag);
     ~Message();
+    
+    // Set timestamp.
     void set_ts(time_t ts);
     time_t ts() const { return this->ts_; }
     const std::string& tag() const { return this->tag_; }
-    
-    void to_msgpack(msgpack::packer<msgpack::sbuffer> *pk) const;
+
+    // Set message data.
     bool set(const std::string &key, const std::string &val);
     bool set(const std::string &key, const char *val);
     bool set(const std::string &key, int val);
     bool set(const std::string &key, double val);
     bool set(const std::string &key, bool val);
     bool del(const std::string &key);
+    Map *retain_map(const std::string &key);
+    Array *retain_array(const std::string &key);
 
+    // Convert to msgpack data format.
+    void to_msgpack(msgpack::packer<msgpack::sbuffer> *pk) const;
+
+    // Linked list connect/disconnect.
+    void attach(Message *next);
+    Message *detach();
+
+    
     class Object {
     public:
       Object() {}
@@ -55,8 +69,6 @@ namespace fluent {
       virtual void to_msgpack(msgpack::packer<msgpack::sbuffer> *pk) 
         const = 0;
     };
-
-    class Array;
 
     class Map : public Object {
     private:
@@ -128,7 +140,7 @@ namespace fluent {
     time_t ts_;
     std::string tag_;
     Map root_;
-
+    Message *next_;    
   };
 }
 
