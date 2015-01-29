@@ -103,9 +103,6 @@ namespace fluent {
       if (msg) {
         msgpack::sbuffer buf;
         msgpack::packer <msgpack::sbuffer> pk(&buf);
-        pk.pack_array(3);
-        pk.pack(msg->tag());
-        pk.pack(msg->ts());
         msg->to_msgpack(&pk);
 
         while(!this->sock_->send(buf.data(), buf.size())) {

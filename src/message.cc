@@ -40,7 +40,11 @@ namespace fluent {
   }
   
   void Message::to_msgpack(msgpack::packer<msgpack::sbuffer> *pk) const {
-    return this->root_.to_msgpack(pk);
+    pk->pack_array(3);           // [?, ?, ?]
+    pk->pack(this->tag_);       // [tag, ?, ?]
+    pk->pack(this->ts_);        // [tag, timestamp, ?]
+    this->root_.to_msgpack(pk);
+    return ;
   }
 
   bool Message::set(const std::string &key, const std::string &val) {

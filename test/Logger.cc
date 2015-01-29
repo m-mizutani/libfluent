@@ -115,6 +115,7 @@ protected:
   void get_line(std::string *tag, std::string *ts, std::string *rec) {
     char buf[BUFSIZ];
     EXPECT_TRUE(NULL != fgets(buf, BUFSIZ, this->pipe_));
+    debug(false, "buf = %s", buf);
 
     std::cmatch m;
     std::regex_search(buf, m, out_ptn_);
@@ -127,16 +128,6 @@ protected:
 };
 
 TEST_F(FluentTest, Logger) {
-  fluent::Logger *logger = new fluent::Logger("localhost", 24224);
-  fluent::Message *msg = logger->retain_message("test.basic");
-  logger->emit(msg);
-  std::string tag, ts, rec;
-  get_line(&tag, &ts, &rec);
-  EXPECT_EQ(tag, "test.basic");
-  EXPECT_EQ(rec, "{}");
-}
-
-TEST_F(FluentTest, Message) {
   fluent::Logger *logger = new fluent::Logger("localhost", 24224);
   const std::string tag = "test.http";
   fluent::Message *msg = logger->retain_message(tag);
