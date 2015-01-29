@@ -53,7 +53,6 @@ namespace fluent {
 
     Socket *sock_;
     pthread_t th_;
-    Message *msg_buf_;
     size_t retry_limit_;
     std::string errmsg_;
     MsgQueue queue_;

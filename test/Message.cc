@@ -105,3 +105,7 @@ TEST(Message, Array) {
   EXPECT_EQ(sbuf.size(), sizeof(expect));
   EXPECT_TRUE(0 == memcmp(sbuf.data(), expect, sizeof(expect)));
 }
+
+TEST(Message, link) {
+  // TODO: add tests
+}

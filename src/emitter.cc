@@ -26,9 +26,10 @@
 
 #include <sstream>
 #include <iostream>
+#include <msgpack.hpp>
+#include <assert.h>
 #include <math.h>
 #include <unistd.h>
-#include <msgpack.hpp>
 
 #include "./fluent/emitter.hpp"
 #include "./debug.h"
@@ -51,8 +52,6 @@ namespace fluent {
   }
 
   bool Emitter::emit(Message *msg) {
-    static const bool DBG = false;
-
     this->queue_.push(msg);
     bool rc = true;
     return rc;
@@ -91,16 +90,14 @@ namespace fluent {
   }
 
   void Emitter::loop() {
-    const bool DBG = false;
-
     while (true) {
-      Message *msg = this->queue_.pop();
 
       if (!this->sock_->is_connected()) {
         this->connect(); // TODO: handle failure of retry
       }
 
-      if (msg) {
+      Message *root = this->queue_.pop();
+      for(Message *msg = root; msg; msg = root->next()) {
         msgpack::sbuffer buf;
         msgpack::packer <msgpack::sbuffer> pk(&buf);
         msg->to_msgpack(&pk);
@@ -110,7 +107,7 @@ namespace fluent {
           this->connect(); // TODO: handle failure of retry
         }
 
-        delete msg;
+        delete root;
       }
     }
   }
@@ -124,14 +121,16 @@ namespace fluent {
   }
   bool MsgQueue::push(Message *msg) {
     static const bool DBG = false;
-    bool rc = true;
     ::pthread_mutex_lock (&(this->mutex_));
     debug(DBG, "entered lock");
+    // TODO: Check queue buffer size
     if (this->msg_head_) {
-      rc = false;
+      assert(this->msg_tail_);
+      this->msg_tail_->attach(msg);
     } else {
       this->msg_head_ = msg;
     }
+    this->msg_tail_ = msg;
     debug(DBG, "send signal");
     ::pthread_cond_signal (&(this->cond_));
     ::pthread_mutex_unlock (&(this->mutex_));
@@ -153,7 +152,8 @@ namespace fluent {
     }
 
     msg = this->msg_head_;
-    this->msg_head_ = nullptr;
+    this->msg_head_ = this->msg_tail_ = nullptr;
+    
     ::pthread_mutex_unlock(&(this->mutex_));
     debug(DBG, "left lock");
 

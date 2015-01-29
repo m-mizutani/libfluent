@@ -25,6 +25,7 @@
  */
 
 #include <time.h>
+#include <assert.h>
 #include "./fluent/message.hpp"
 #include "./debug.h"
 
@@ -71,7 +72,7 @@ namespace fluent {
     assert(this->next_ == nullptr);
     this->next_ = next;
   }
-  Message* detach() {
+  Message* Message::detach() {
     Message *m = this->next_;
     if (this->next_) {
       this->next_ = nullptr;

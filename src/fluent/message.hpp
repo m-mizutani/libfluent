@@ -32,10 +32,10 @@
 
 namespace fluent {
   class Message {
-    class Array;
-    class Map;
     
   public:
+    class Array;
+    class Map;
     Message(const std::string &tag);
     ~Message();
     
@@ -60,7 +60,7 @@ namespace fluent {
     // Linked list connect/disconnect.
     void attach(Message *next);
     Message *detach();
-
+    Message *next() const { return this->next_; };
     
     class Object {
     public:
