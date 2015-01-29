@@ -72,6 +72,7 @@ namespace fluent {
     assert(this->next_ == nullptr);
     this->next_ = next;
   }
+
   Message* Message::detach() {
     Message *m = this->next_;
     if (this->next_) {

@@ -32,7 +32,6 @@
 
 namespace fluent {
   class Message {
-    
   public:
     class Array;
     class Map;
