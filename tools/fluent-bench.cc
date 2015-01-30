@@ -29,7 +29,7 @@
 #include <stdlib.h>
 #include <unistd.h>
 #include <iostream>
-#include "./src/fluent.hpp"
+#include "../src/fluent.hpp"
 
 int main(int argc, char *argv[]) {
   if (argc != 4) {

@@ -24,7 +24,7 @@
  * POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include <regex>
+// #include <regex>
 #include <string.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -48,13 +48,15 @@ private:
   
 protected:
   FILE *pipe_;
-  std::regex out_ptn_;
+  // std::regex out_ptn_;
 
   
   FluentTest() :
-    pid_(0),
+    pid_(0)
+    /*
     out_ptn_("(\\d{4}-\\d{2}-\\d{2} \\d{2}:\\d{2}:\\d{2}) "
              "\\+\\d{4} (\\S+): (.*)")
+    */
   {
   }
   virtual ~FluentTest() {
@@ -113,16 +115,28 @@ protected:
   }
   
   void get_line(std::string *tag, std::string *ts, std::string *rec) {
+    static const bool DBG = false;
     char buf[BUFSIZ];
     EXPECT_TRUE(NULL != fgets(buf, BUFSIZ, this->pipe_));
     debug(false, "buf = %s", buf);
+    std::string line(buf);
 
-    std::cmatch m;
-    std::regex_search(buf, m, out_ptn_);
-    ASSERT_EQ(m.size(), 4);
-    *ts  = m[1];
-    *tag = m[2];
-    *rec = m[3];
+    size_t date_ptr = line.find(" ");
+    size_t time_ptr = line.find(" ", date_ptr + 1);
+    size_t tag_ptr  = line.find(" ", time_ptr + 1);
+    size_t rec_ptr  = line.find(" ", tag_ptr  + 1);
+
+    debug(DBG, "date_ptr = %lu", date_ptr);
+    debug(DBG, "time_ptr = %lu", time_ptr);
+    debug(DBG, "tag_ptr  = %lu", tag_ptr);
+    debug(DBG, "rec_ptr  = %lu", rec_ptr);
+
+    // std::cmatch m;
+    // std::regex_search(buf, m, out_ptn_);
+    // ASSERT_EQ(m.size(), 4);
+    ts->assign(line, 0, tag_ptr);
+    tag->assign(line, tag_ptr + 1, rec_ptr - tag_ptr - 2);
+    rec->assign(line, rec_ptr + 1, line.length() - rec_ptr - 2);
   }
 
 };
