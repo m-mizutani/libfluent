@@ -25,8 +25,71 @@
  */
 
 #include <string.h>
+#include <stdio.h>
+#include <stdlib.h>
+#include <errno.h>
+#include <signal.h>
 #include "./gtest.h"
 #include "../src/fluent/message.hpp"
+#include "../src/debug.h"
+
+class MessageTest : public ::testing::Test {
+private:
+  enum { RP = 0, WP = 1 };
+  
+protected:
+  msgpack::sbuffer sbuf_;
+  msgpack::packer<msgpack::sbuffer> pkr_;
+  MessageTest() : pkr_(&(this->sbuf_)) {}
+  virtual ~MessageTest() {}
+  virtual void SetUp() {}
+  virtual void TearDown() {}
+
+  std::string encode_msgpack(const std::string ruby_code) {
+    std::stringstream ss;
+    ss << "d=" << ruby_code << ";" <<
+      "require 'msgpack'; a=[]; STDOUT.write(d.to_msgpack) ";
+    
+    int pipe_c2p[2], pipe_p2c[2];
+    pipe(pipe_c2p);
+    pipe(pipe_p2c);
+    
+    pid_t pid = fork();
+    if (pid == 0) {
+      // Running as child.
+      std::vector<std::string> arg = {"ruby"};
+      char **argv = new char*[arg.size() + 1];
+      for (size_t i = 0; i < arg.size(); i++) {
+        argv[i] = const_cast<char*>(arg[i].c_str());
+      }
+      argv[arg.size()] = NULL;
+
+      close(pipe_p2c[WP]);
+      close(pipe_c2p[RP]);
+      
+      dup2(pipe_p2c[RP], 0);
+      dup2(pipe_c2p[WP], 1);
+      close(pipe_p2c[RP]);
+      close(pipe_c2p[WP]);
+
+      if (execvp("ruby", static_cast<char *const *>(argv)) < 0) {
+        perror("execvp"); 
+      }
+    }
+
+    // Running as parent.
+    write(pipe_p2c[WP], ss.str().c_str(), ss.str().length());
+    close(pipe_p2c[WP]);
+    char buf[BUFSIZ];
+    int stat;
+    int rsize = read(pipe_c2p[RP], buf, BUFSIZ);
+    int rc = waitpid(pid, &stat, 0);
+    EXPECT_EQ(pid, rc);
+
+    std::string res(buf, rsize);
+    return res;
+  }
+};
 
 TEST(Message, basic) {
   fluent::Message::Map *obj = new fluent::Message::Map();
@@ -42,9 +105,7 @@ TEST(Message, basic) {
   uint8_t data[] = {0x81, 0xa3, 0x61, 0x62, 0x63, 0x01};
   obj->to_msgpack(&pkr);
   EXPECT_EQ(sbuf.size(), sizeof(data));
-  EXPECT_TRUE(0 == memcmp(sbuf.data(), data, sizeof(data)));
-
-  
+  EXPECT_TRUE(0 == memcmp(sbuf.data(), data, sizeof(data)));  
 }
 
 TEST(Message, Map) {
@@ -112,9 +173,11 @@ TEST(Message, NestArray) {
   msgpack::packer<msgpack::sbuffer> pkr(&sbuf);
   obj->push("a");  // ["a"]
   fluent::Message::Array *arr = obj->retain_array(); // ["a", []]
+  ASSERT_TRUE(arr != nullptr);
   arr->push("b"); // ["a", ["b"]]
   arr->push(1);   // ["a", ["b", 1]]
   fluent::Message::Map *map = obj->retain_map();  // ["a", ["b", 1], {}]
+  ASSERT_TRUE(map != nullptr);
   map->set("c", 1); // ["a", ["b", 1], {"c": 1}}]
 
   /*
@@ -137,10 +200,12 @@ TEST(Message, NestMap) {
   
   obj->set("a", 1);  // {"a":1}
   fluent::Message::Array *arr = obj->retain_array("b"); // {"a":1, "b": []}
+  ASSERT_TRUE(arr != nullptr);
   arr->push(2); // {"a":1, "b": [2]}
   arr->push(3); // {"a":1, "b": [2, 3]}
   fluent::Message::Map *map = obj->retain_map("c");
   // {"a":1, "b": [2, 3], "c": {}}
+  ASSERT_TRUE(map != nullptr);
   map->set("d", 4);   // {"a":1, "b": [2, 3], "c": {"d":4}}
 
   /*
@@ -148,8 +213,8 @@ TEST(Message, NestMap) {
     require 'msgpack'; a=[]; d.to_msgpack.each_byte{|v| 
     a.push(sprintf("0x%02X", v))};puts "{#{a.join(', ')}};"
    */
-    uint8_t expect[] = {0x83, 0xA1, 0x61, 0x01, 0xA1, 0x62, 0x92, 0x02,
-                        0x03, 0xA1, 0x63, 0x81, 0xA1, 0x64, 0x04};
+  uint8_t expect[] = {0x83, 0xA1, 0x61, 0x01, 0xA1, 0x62, 0x92, 0x02,
+                      0x03, 0xA1, 0x63, 0x81, 0xA1, 0x64, 0x04};
 
   
   obj->to_msgpack(&pkr);
@@ -157,6 +222,18 @@ TEST(Message, NestMap) {
   EXPECT_TRUE(0 == memcmp(sbuf.data(), expect, sizeof(expect)));                      
 }
 
+TEST_F(MessageTest, NotOverwriteMap) {
+  fluent::Message::Map *obj = new fluent::Message::Map();
+
+  EXPECT_TRUE(obj->set("a", 1));
+  EXPECT_FALSE(obj->set("a", 2));
+
+  std::string expect = encode_msgpack("{'a'=>1}");
+
+  obj->to_msgpack(&pkr_);
+  EXPECT_EQ(sbuf_.size(), expect.length());
+  EXPECT_TRUE(0 == memcmp(sbuf_.data(), expect.data(), sbuf_.size()));
+}
 
 TEST(Message, link) {
   // TODO: add tests
