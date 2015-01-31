@@ -48,7 +48,7 @@ protected:
   std::string encode_msgpack(const std::string ruby_code) {
     std::stringstream ss;
     ss << "d=" << ruby_code << ";" <<
-      "require 'msgpack'; a=[]; STDOUT.write(d.to_msgpack) ";
+      "require 'msgpack'; STDOUT.write(d.to_msgpack) ";
     
     int pipe_c2p[2], pipe_p2c[2];
     pipe(pipe_c2p);
@@ -108,11 +108,8 @@ TEST(Message, basic) {
   EXPECT_TRUE(0 == memcmp(sbuf.data(), data, sizeof(data)));  
 }
 
-TEST(Message, Map) {
+TEST_F(MessageTest, Map) {
   fluent::Message::Map *obj = new fluent::Message::Map();
-  msgpack::sbuffer sbuf;
-  msgpack::packer<msgpack::sbuffer> pkr(&sbuf);
-
   // Bool
   EXPECT_TRUE(obj->set("bool", true));
   // Float
@@ -122,27 +119,15 @@ TEST(Message, Map) {
   // String
   EXPECT_TRUE(obj->set("str", "test"));
 
-  /*
-    d = {'bool'=>true, 'float'=>34.567, 'int'=>2345, 'str'=>'test', }
-    require 'msgpack'; a=[]; d.to_msgpack.each_byte{|v| 
-    a.push(sprintf("0x%02X", v))};puts "{#{a.join(', ')}};"
-  */
-  uint8_t expect[] = {0x84, 0xA4, 0x62, 0x6F, 0x6F, 0x6C, 0xC3, 0xA5,
-                      0x66, 0x6C, 0x6F, 0x61, 0x74, 0xCB, 0x40, 0x41,
-                      0x48, 0x93, 0x74, 0xBC, 0x6A, 0x7F, 0xA3, 0x69,
-                      0x6E, 0x74, 0xCD, 0x09, 0x29, 0xA3, 0x73, 0x74,
-                      0x72, 0xA4, 0x74, 0x65, 0x73, 0x74};
-
-  obj->to_msgpack(&pkr);
-  EXPECT_EQ(sbuf.size(), sizeof(expect));
-  EXPECT_TRUE(0 == memcmp(sbuf.data(), expect, sizeof(expect)));
+  std::string expect = encode_msgpack("{'bool'=>true, 'float'=>34.567, "
+                                      "'int'=>2345, 'str'=>'test', }");
+  obj->to_msgpack(&pkr_);
+  EXPECT_EQ(sbuf_.size(), expect.length());
+  EXPECT_TRUE(0 == memcmp(sbuf_.data(), expect.data(), sbuf_.size()));
 }
 
-TEST(Message, Array) {
+TEST_F(MessageTest, Array) {
   fluent::Message::Array *obj = new fluent::Message::Array();
-  msgpack::sbuffer sbuf;
-  msgpack::packer<msgpack::sbuffer> pkr(&sbuf);
-
   // Bool
   obj->push(true);
   // Float
@@ -152,25 +137,14 @@ TEST(Message, Array) {
   // String
   obj->push("test");
 
-  /*
-    d = [true, 34.567, 2345, 'test']
-    require 'msgpack'; a=[]; d.to_msgpack.each_byte{|v| 
-    a.push(sprintf("0x%02X", v))};puts "{#{a.join(', ')}};"
-  */
-
-  uint8_t expect[] = {0x94, 0xC3, 0xCB, 0x40, 0x41, 0x48, 0x93, 0x74,
-                      0xBC, 0x6A, 0x7F, 0xCD, 0x09, 0x29, 0xA4, 0x74,
-                      0x65, 0x73, 0x74};
-
-  obj->to_msgpack(&pkr);
-  EXPECT_EQ(sbuf.size(), sizeof(expect));
-  EXPECT_TRUE(0 == memcmp(sbuf.data(), expect, sizeof(expect)));
+  std::string expect = encode_msgpack("[true, 34.567, 2345, 'test']");
+  obj->to_msgpack(&pkr_);
+  EXPECT_EQ(sbuf_.size(), expect.length());
+  EXPECT_TRUE(0 == memcmp(sbuf_.data(), expect.data(), sbuf_.size()));
 }
 
-TEST(Message, NestArray) {
+TEST_F(MessageTest, NestArray) {
   fluent::Message::Array *obj = new fluent::Message::Array();
-  msgpack::sbuffer sbuf;
-  msgpack::packer<msgpack::sbuffer> pkr(&sbuf);
   obj->push("a");  // ["a"]
   fluent::Message::Array *arr = obj->retain_array(); // ["a", []]
   ASSERT_TRUE(arr != nullptr);
@@ -180,23 +154,14 @@ TEST(Message, NestArray) {
   ASSERT_TRUE(map != nullptr);
   map->set("c", 1); // ["a", ["b", 1], {"c": 1}}]
 
-  /*
-    d=["a",["b", 1],{"c"=>1}]
-    require 'msgpack'; a=[]; d.to_msgpack.each_byte{|v| 
-    a.push(sprintf("0x%02X", v))};puts "{#{a.join(', ')}};"
-   */
-  uint8_t expect[] = {0x93, 0xA1, 0x61, 0x92, 0xA1, 0x62, 0x01, 0x81,
-                      0xA1, 0x63, 0x01};
-  
-  obj->to_msgpack(&pkr);
-  EXPECT_EQ(sbuf.size(), sizeof(expect));
-  EXPECT_TRUE(0 == memcmp(sbuf.data(), expect, sizeof(expect)));                      
+  std::string expect = encode_msgpack("['a',['b', 1],{'c'=>1}]");
+  obj->to_msgpack(&pkr_);
+  EXPECT_EQ(sbuf_.size(), expect.length());
+  EXPECT_TRUE(0 == memcmp(sbuf_.data(), expect.data(), sbuf_.size()));
 }
 
-TEST(Message, NestMap) {
+TEST_F(MessageTest, NestMap) {
   fluent::Message::Map *obj = new fluent::Message::Map();
-  msgpack::sbuffer sbuf;
-  msgpack::packer<msgpack::sbuffer> pkr(&sbuf);
   
   obj->set("a", 1);  // {"a":1}
   fluent::Message::Array *arr = obj->retain_array("b"); // {"a":1, "b": []}
@@ -208,18 +173,10 @@ TEST(Message, NestMap) {
   ASSERT_TRUE(map != nullptr);
   map->set("d", 4);   // {"a":1, "b": [2, 3], "c": {"d":4}}
 
-  /*
-    d={"a"=>1, "b"=>[2,3], "c"=>{"d"=>4}}
-    require 'msgpack'; a=[]; d.to_msgpack.each_byte{|v| 
-    a.push(sprintf("0x%02X", v))};puts "{#{a.join(', ')}};"
-   */
-  uint8_t expect[] = {0x83, 0xA1, 0x61, 0x01, 0xA1, 0x62, 0x92, 0x02,
-                      0x03, 0xA1, 0x63, 0x81, 0xA1, 0x64, 0x04};
-
-  
-  obj->to_msgpack(&pkr);
-  EXPECT_EQ(sbuf.size(), sizeof(expect));
-  EXPECT_TRUE(0 == memcmp(sbuf.data(), expect, sizeof(expect)));                      
+  std::string expect = encode_msgpack("{'a'=>1, 'b'=>[2,3], 'c'=>{'d'=>4}}");
+  obj->to_msgpack(&pkr_);
+  EXPECT_EQ(sbuf_.size(), expect.length());
+  EXPECT_TRUE(0 == memcmp(sbuf_.data(), expect.data(), sbuf_.size()));
 }
 
 TEST_F(MessageTest, NotOverwriteMap) {
