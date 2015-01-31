@@ -49,13 +49,13 @@ Map
 ```c++
 fluent::Message *msg = logger->retain_message("test.map");
 // {}
-msg->set("t1", "a"); 
+msg->set("t1", "a");
 // {"t1": "a"}
-fluent::Message::Map *m1 = msg->retain_map("map1"); 
+fluent::Message::Map *m1 = msg->retain_map("map1");
 // {"t1": "a", "map1": {}}
 m1->set("t2", "b");
 // {"t2": "a", "map1": {"t2": "b"}}
-fluent::Message::Map *m2 = m1->retain_map("map2"); 
+fluent::Message::Map *m2 = m1->retain_map("map2");
 // {"t1": "a", "map1": {"t2": "b", "map2":{}}}
 m2->set("t2", "b");
 // {"t2": "a", "map1": {"t2": "b", "map2":{"t2": "b"}}}
@@ -65,11 +65,16 @@ Array
 ```c++
 fluent::Message *msg = logger->retain_message("test.array");
 // {}
-fluent::Message::Array *arr = msg->retain_array("arr1"); // {"arr1": []}
-arr->push(1);                                            // {"arr1": [1]}
-arr->push(2);                                            // {"arr1": [1, 2]}
-fluent::Message::Map *map = arr->retain_map("map2");     // {"arr1": [1, 2, {}]}
-map->set("t", "a");                                      // {"arr1": [1, 2, {"t": "a"}]}
+fluent::Message::Array *arr = msg->retain_array("arr1");
+// {"arr1": []}
+arr->push(1);
+// {"arr1": [1]}
+arr->push(2);
+// {"arr1": [1, 2]}
+fluent::Message::Map *map = arr->retain_map("map2");
+// {"arr1": [1, 2, {}]}
+map->set("t", "a");
+// {"arr1": [1, 2, {"t": "a"}]}
 ```
 
 Author
