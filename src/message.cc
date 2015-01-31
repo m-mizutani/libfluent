@@ -93,6 +93,28 @@ namespace fluent {
     }
   }
 
+  Message::Map* Message::Map::retain_map(const std::string &key) {
+    if (this->map_.find(key) == this->map_.end()) {
+      Map *obj = new Map();
+      this->map_.insert(std::make_pair(key, obj));
+      return obj;
+    } else {
+      // Already exists
+      return nullptr;
+    }
+  }
+
+  Message::Array* Message::Map::retain_array(const std::string &key) {
+    if (this->map_.find(key) == this->map_.end()) {
+      Array *obj = new Array();
+      this->map_.insert(std::make_pair(key, obj));
+      return obj;
+    } else {
+      // Already exists
+      return nullptr;
+    }
+  }
+  
   // TODO: refactoring to merge set int, string, float, bool
   bool Message::Map::set(const std::string &key, int val) {
     if (this->map_.find(key) == this->map_.end()) {
@@ -208,6 +230,18 @@ namespace fluent {
       this->array_[i]->to_msgpack(pk);
     }
   }
+
+  Message::Map* Message::Array::retain_map() {
+    Map *map = new Map();
+    this->array_.push_back(map);
+    return map;
+  }
+  Message::Array* Message::Array::retain_array() {
+    Array *arr = new Array();
+    this->array_.push_back(arr);
+    return arr;
+  }
+
 
 
   Message::Fixnum::Fixnum(int val) : val_(val) {}

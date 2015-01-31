@@ -106,6 +106,58 @@ TEST(Message, Array) {
   EXPECT_TRUE(0 == memcmp(sbuf.data(), expect, sizeof(expect)));
 }
 
+TEST(Message, NestArray) {
+  fluent::Message::Array *obj = new fluent::Message::Array();
+  msgpack::sbuffer sbuf;
+  msgpack::packer<msgpack::sbuffer> pkr(&sbuf);
+  obj->push("a");  // ["a"]
+  fluent::Message::Array *arr = obj->retain_array(); // ["a", []]
+  arr->push("b"); // ["a", ["b"]]
+  arr->push(1);   // ["a", ["b", 1]]
+  fluent::Message::Map *map = obj->retain_map();  // ["a", ["b", 1], {}]
+  map->set("c", 1); // ["a", ["b", 1], {"c": 1}}]
+
+  /*
+    d=["a",["b", 1],{"c"=>1}]
+    require 'msgpack'; a=[]; d.to_msgpack.each_byte{|v| 
+    a.push(sprintf("0x%02X", v))};puts "{#{a.join(', ')}};"
+   */
+  uint8_t expect[] = {0x93, 0xA1, 0x61, 0x92, 0xA1, 0x62, 0x01, 0x81,
+                      0xA1, 0x63, 0x01};
+  
+  obj->to_msgpack(&pkr);
+  EXPECT_EQ(sbuf.size(), sizeof(expect));
+  EXPECT_TRUE(0 == memcmp(sbuf.data(), expect, sizeof(expect)));                      
+}
+
+TEST(Message, NestMap) {
+  fluent::Message::Map *obj = new fluent::Message::Map();
+  msgpack::sbuffer sbuf;
+  msgpack::packer<msgpack::sbuffer> pkr(&sbuf);
+  
+  obj->set("a", 1);  // {"a":1}
+  fluent::Message::Array *arr = obj->retain_array("b"); // {"a":1, "b": []}
+  arr->push(2); // {"a":1, "b": [2]}
+  arr->push(3); // {"a":1, "b": [2, 3]}
+  fluent::Message::Map *map = obj->retain_map("c");
+  // {"a":1, "b": [2, 3], "c": {}}
+  map->set("d", 4);   // {"a":1, "b": [2, 3], "c": {"d":4}}
+
+  /*
+    d={"a"=>1, "b"=>[2,3], "c"=>{"d"=>4}}
+    require 'msgpack'; a=[]; d.to_msgpack.each_byte{|v| 
+    a.push(sprintf("0x%02X", v))};puts "{#{a.join(', ')}};"
+   */
+    uint8_t expect[] = {0x83, 0xA1, 0x61, 0x01, 0xA1, 0x62, 0x92, 0x02,
+                        0x03, 0xA1, 0x63, 0x81, 0xA1, 0x64, 0x04};
+
+  
+  obj->to_msgpack(&pkr);
+  EXPECT_EQ(sbuf.size(), sizeof(expect));
+  EXPECT_TRUE(0 == memcmp(sbuf.data(), expect, sizeof(expect)));                      
+}
+
+
 TEST(Message, link) {
   // TODO: add tests
 }
