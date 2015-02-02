@@ -66,9 +66,11 @@ namespace fluent {
     }
 
     this->msg_set_.erase(msg);
-    this->emitter_->emit(msg);
-    
-    return true;
+    return this->emitter_->emit(msg);
+  }
+
+  void Logger::set_queue_limit(size_t limit) {
+    this->emitter_->set_queue_limit(limit);
   }
 
 }

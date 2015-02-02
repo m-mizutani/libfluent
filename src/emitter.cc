@@ -52,11 +52,14 @@ namespace fluent {
   }
 
   bool Emitter::emit(Message *msg) {
-    this->queue_.push(msg);
-    bool rc = true;
+    bool rc = this->queue_.push(msg);
     return rc;
   }
 
+  void Emitter::set_queue_limit(size_t limit) {
+    this->queue_.set_limit(limit);
+  }
+  
   bool Emitter::connect() {
     static const bool DBG = false;
 
@@ -103,7 +106,7 @@ namespace fluent {
         msg->to_msgpack(&pk);
 
         while(!this->sock_->send(buf.data(), buf.size())) {
-          std::cerr << "socket error: " << this->sock_->errmsg() << std::endl;
+          // std::cerr << "socket error: " << this->sock_->errmsg() << std::endl;
           this->connect(); // TODO: handle failure of retry
         }
 
@@ -112,7 +115,8 @@ namespace fluent {
     }
   }
 
-  MsgQueue::MsgQueue() : msg_head_(nullptr), msg_tail_(nullptr) {
+  MsgQueue::MsgQueue() : msg_head_(nullptr), msg_tail_(nullptr),
+                         count_(0), limit_(1000) {
     // Setup pthread.
     ::pthread_mutex_init(&(this->mutex_), NULL);
     ::pthread_cond_init(&(this->cond_), NULL);
@@ -121,21 +125,30 @@ namespace fluent {
   }
   bool MsgQueue::push(Message *msg) {
     static const bool DBG = false;
+    bool rc = true;
+
     ::pthread_mutex_lock (&(this->mutex_));
     debug(DBG, "entered lock");
-    // TODO: Check queue buffer size
-    if (this->msg_head_) {
-      assert(this->msg_tail_);
-      this->msg_tail_->attach(msg);
+
+    if (this->count_ < this->limit_) {
+      if (this->msg_head_) {
+        assert(this->msg_tail_);
+        this->msg_tail_->attach(msg);
+      } else {
+        this->msg_head_ = msg;
+      }
+      this->msg_tail_ = msg;
+      this->count_++;
+      debug(DBG, "send signal");
+      ::pthread_cond_signal (&(this->cond_));
     } else {
-      this->msg_head_ = msg;
+      // queue is full.
+      rc = false;
     }
-    this->msg_tail_ = msg;
-    debug(DBG, "send signal");
-    ::pthread_cond_signal (&(this->cond_));
     ::pthread_mutex_unlock (&(this->mutex_));
     debug(DBG, "left lock");
-    return true;
+    
+    return rc;
   }
   Message* MsgQueue::pop() {
     static const bool DBG = false;
@@ -151,13 +164,21 @@ namespace fluent {
       debug(DBG, "left wait");
     }
 
+    assert(this->count_ > 0);
     msg = this->msg_head_;
     this->msg_head_ = this->msg_tail_ = nullptr;
+    this->count_--;
     
     ::pthread_mutex_unlock(&(this->mutex_));
     debug(DBG, "left lock");
 
     return msg;
+  }
+
+  void MsgQueue::set_limit(size_t limit) {
+    ::pthread_mutex_lock(&(this->mutex_));
+    this->limit_ = limit;
+    ::pthread_mutex_unlock(&(this->mutex_));    
   }
 
 }

@@ -39,12 +39,18 @@ namespace fluent {
     pthread_cond_t cond_;
     Message *msg_head_;
     Message *msg_tail_;
+    size_t count_;
+    size_t limit_;
     
   public:
     MsgQueue();
     ~MsgQueue();
     bool push(Message *msg);
     Message *pop();
+    void set_limit(size_t limit);
+    // count_ may be critical section, however the function is read only
+    // and integer can be read atomically in x86 arch.
+    size_t count() const { return this->count_; };    
   };
 
   class Emitter {
@@ -64,6 +70,7 @@ namespace fluent {
   public:
     Emitter(const std::string &host, int port);
     ~Emitter();
+    void set_queue_limit(size_t limit);
     bool emit(Message *msg);
     const std::string& errmsg() const { return this->errmsg_; }
   };

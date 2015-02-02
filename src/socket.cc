@@ -100,6 +100,7 @@ namespace fluent {
   bool Socket::send(void *data, size_t len) {
     if (0 > ::write(this->sock_, data, len)) {
       this->errmsg_.assign(strerror(errno));
+      debug(false, "err: %s", this->errmsg_.c_str());
       this->is_connected_ = false;
       ::close(this->sock_);
       return false;

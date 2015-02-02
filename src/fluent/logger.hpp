@@ -52,6 +52,7 @@ namespace fluent {
     Message* retain_message(const std::string &tag);
     bool emit(Message *msg);
     const std::string& errmsg() const { return this->errmsg_; }
+    void set_queue_limit(size_t limit);
   };
 
 }
