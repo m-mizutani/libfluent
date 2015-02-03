@@ -45,9 +45,6 @@ namespace fluent {
   }
 
   Emitter::~Emitter() {
-    // ::pthread_cancel(this->th_);
-    this->queue_.term();
-    ::pthread_join(this->th_, nullptr);
   }
 
   bool Emitter::emit(Message *msg) {
@@ -66,8 +63,13 @@ namespace fluent {
     return NULL;
   }
 
-  void Emitter::run_worker() {
+  void Emitter::start_worker() {
     ::pthread_create(&(this->th_), NULL, Emitter::run_thread, this);    
+  }
+  void Emitter::stop_worker() {
+    // ::pthread_cancel(this->th_);
+    this->queue_.term();
+    ::pthread_join(this->th_, nullptr);
   }
 
   // ----------------------------------------------------------------
@@ -81,9 +83,10 @@ namespace fluent {
     std::stringstream ss;
     ss << port;
     this->sock_ = new Socket(host, ss.str());
-    this->run_worker();
+    this->start_worker();
   }
   InetEmitter::~InetEmitter() {
+    this->stop_worker();
     delete this->sock_;
   }
 
@@ -163,13 +166,11 @@ namespace fluent {
       this->set_errmsg(strerror(errno));
     } else {
       this->enabled_ = true;
-      this->run_worker();
+      this->start_worker();
     }
   }
   FileEmitter::~FileEmitter() {
-    while(this->queue_.count() > 0) {
-      usleep(10000);
-    }
+    this->stop_worker();
     if (this->enabled_) {
       ::close(this->fd_);
     }

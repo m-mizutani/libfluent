@@ -71,8 +71,9 @@ namespace fluent {
     void set_errmsg(const std::string &errmsg) {
       this->errmsg_ = errmsg;
     }
-    void run_worker();
-    
+    void start_worker();
+    void stop_worker();
+
   public:
     Emitter();
     virtual ~Emitter();
