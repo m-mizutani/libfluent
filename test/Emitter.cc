@@ -124,5 +124,5 @@ TEST(FileEmitter, basic) {
 
   EXPECT_EQ(sbuf.size(), readsize);
   EXPECT_TRUE(0 == memcmp(sbuf.data(), buf, sbuf.size()));
-  
+  EXPECT_TRUE(0 == unlink(fname.c_str()));  
 }
