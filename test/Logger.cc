@@ -51,6 +51,8 @@ TEST_F(FluentTest, Logger) {
   get_line(&res_tag, &res_ts, &res_rec);
   EXPECT_EQ(res_tag, tag);
   EXPECT_EQ(res_rec, "{\"port\":443,\"url\":\"https://github.com\"}");
+
+  delete logger;
 }
 
 
@@ -83,5 +85,7 @@ TEST_F(FluentTest, QueueLimit) {
   msg->set("url", "https://github.com");
   msg->set("port", 443);
   EXPECT_FALSE(logger->emit(msg));
+
+  delete logger;
 }
 
