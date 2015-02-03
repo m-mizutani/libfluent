@@ -42,7 +42,7 @@ namespace fluent {
     port_(port),
     retry_max_(20)
   {
-    this->emitter_ = new Emitter(host, port);
+    this->emitter_ = new InetEmitter(host, port);
   }
   Logger::~Logger() {
     // delete not used messages.

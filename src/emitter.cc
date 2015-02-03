@@ -35,20 +35,14 @@
 #include "./debug.h"
 
 namespace fluent {
-  const int Emitter::WAIT_MAX = 120 * 1000;
-
-  Emitter::Emitter(const std::string &host, int port) :
-    retry_limit_(0)
-  {
-    // Setup socket.
-    std::stringstream ss;
-    ss << port;
-    this->sock_ = new Socket(host, ss.str());
-
-    ::pthread_create(&(this->th_), NULL, Emitter::run_thread, this);    
+  // ----------------------------------------------------------------
+  // Emitter
+  Emitter::Emitter() {
   }
 
   Emitter::~Emitter() {
+    ::pthread_cancel(this->th_);
+    ::pthread_join(this->th_, nullptr);
   }
 
   bool Emitter::emit(Message *msg) {
@@ -59,8 +53,35 @@ namespace fluent {
   void Emitter::set_queue_limit(size_t limit) {
     this->queue_.set_limit(limit);
   }
-  
-  bool Emitter::connect() {
+
+  void* Emitter::run_thread(void *obj) {
+    Emitter *emitter = static_cast<Emitter*>(obj);
+    emitter->worker();
+    return NULL;
+  }
+
+  void Emitter::run_worker() {
+    ::pthread_create(&(this->th_), NULL, Emitter::run_thread, this);    
+  }
+
+  // ----------------------------------------------------------------
+  // SocketEmitter
+  const int InetEmitter::WAIT_MAX = 120 * 1000;
+
+  InetEmitter::InetEmitter(const std::string &host, int port) :
+    Emitter(), retry_limit_(0)
+  {
+    // Setup socket.
+    std::stringstream ss;
+    ss << port;
+    this->sock_ = new Socket(host, ss.str());
+    this->run_worker();
+  }
+  InetEmitter::~InetEmitter() {
+    delete this->sock_;
+  }
+
+  bool InetEmitter::connect() {
     static const bool DBG = false;
 
     for (size_t i = 0; this->retry_limit_ == 0 || i < this->retry_limit_;
@@ -80,25 +101,18 @@ namespace fluent {
       usleep(wait_msec * 1000);
     }
 
-    this->errmsg_ = this->sock_->errmsg();
+    this->set_errmsg(this->sock_->errmsg());
     delete this->sock_;
     this->sock_ = nullptr;
     return false;
   }
 
-  void* Emitter::run_thread(void *obj) {
-    Emitter *emitter = static_cast<Emitter*>(obj);
-    emitter->loop();
-    return NULL;
-  }
+  void InetEmitter::worker() {
+    if (!this->sock_->is_connected()) {
+      this->connect(); // TODO: handle failure of retry
+    }
 
-  void Emitter::loop() {
     while (true) {
-
-      if (!this->sock_->is_connected()) {
-        this->connect(); // TODO: handle failure of retry
-      }
-
       Message *root = this->queue_.pop();
       for(Message *msg = root; msg; msg = root->next()) {
         msgpack::sbuffer buf;
@@ -115,6 +129,8 @@ namespace fluent {
     }
   }
 
+  // ----------------------------------------------------------------
+  // MsgQueue
   MsgQueue::MsgQueue() : msg_head_(nullptr), msg_tail_(nullptr),
                          count_(0), limit_(1000) {
     // Setup pthread.

@@ -55,27 +55,40 @@ namespace fluent {
 
   class Emitter {
   private:
-    static const int WAIT_MAX;
-
-    Socket *sock_;
     pthread_t th_;
-    size_t retry_limit_;
     std::string errmsg_;
-    MsgQueue queue_;
     
     static void* run_thread(void *obj);
-    void loop();
-    bool connect();
-
+    virtual void worker() = 0;
+    
+  protected:
+    MsgQueue queue_;
+    void set_errmsg(const std::string &errmsg) {
+      this->errmsg_ = errmsg;
+    }
+    void run_worker();
+    
   public:
-    Emitter(const std::string &host, int port);
-    ~Emitter();
+    Emitter();
+    virtual ~Emitter();
     void set_queue_limit(size_t limit);
     bool emit(Message *msg);
     const std::string& errmsg() const { return this->errmsg_; }
   };
 
+  class InetEmitter : public Emitter {
+  private:
+    static const int WAIT_MAX;
 
+    Socket *sock_;
+    size_t retry_limit_;
+    bool connect();
+
+  public:
+    InetEmitter(const std::string &host, int port);
+    ~InetEmitter();
+    void worker();
+  };
 }
 
 
