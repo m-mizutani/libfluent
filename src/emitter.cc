@@ -50,6 +50,7 @@ namespace fluent {
   }
 
   bool Emitter::emit(Message *msg) {
+    debug(false, "emit %p", msg);
     bool rc = this->queue_.push(msg);
     return rc;
   }
@@ -123,10 +124,12 @@ namespace fluent {
         msgpack::packer <msgpack::sbuffer> pk(&buf);
         msg->to_msgpack(&pk);
 
+        debug(false, "sending msg %p", msg);
         while(!this->sock_->send(buf.data(), buf.size())) {
           // std::cerr << "socket error: " << this->sock_->errmsg() << std::endl;
           this->connect(); // TODO: handle failure of retry
         }
+        debug(false, "sent %p", msg);
 
       }
       delete root;
@@ -189,6 +192,7 @@ namespace fluent {
     ::pthread_mutex_lock (&(this->mutex_));
     debug(DBG, "entered lock");
 
+    debug(DBG, "PUSH: count:%lu, limit:%lu", this->count_, this->limit_);
     if (this->count_ < this->limit_) {
       if (this->msg_head_) {
         assert(this->msg_tail_);
@@ -204,6 +208,8 @@ namespace fluent {
       // queue is full.
       rc = false;
     }
+    debug(DBG, "PUSHED: count:%lu, limit:%lu", this->count_, this->limit_);
+    
     ::pthread_mutex_unlock (&(this->mutex_));
     debug(DBG, "left lock");
     
@@ -226,7 +232,7 @@ namespace fluent {
     assert(this->count_ > 0);
     msg = this->msg_head_;
     this->msg_head_ = this->msg_tail_ = nullptr;
-    this->count_--;
+    this->count_ = 0;
     
     ::pthread_mutex_unlock(&(this->mutex_));
     debug(DBG, "left lock");

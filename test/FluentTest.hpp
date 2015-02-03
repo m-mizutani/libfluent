@@ -24,7 +24,10 @@
  * POSSIBILITY OF SUCH DAMAGE.
  */
 
-// #include <regex>
+#ifndef __TEST_FLUENTTEST_HPP__
+#define __TEST_FLUENTTEST_HPP__
+
+#include <fcntl.h>
 #include <string.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -32,52 +35,33 @@
 #include <signal.h>
 
 
-#include "./FluentTest.hpp"
-#include "../src/fluent/logger.hpp"
-#include "../src/fluent/message.hpp"
+#include "./gtest.h"
+#include "../src/fluent/emitter.hpp"
+
 #include "../src/debug.h"
 
 
-TEST_F(FluentTest, Logger) {
-  fluent::Logger *logger = new fluent::Logger("localhost", 24224);
-  const std::string tag = "test.http";
-  fluent::Message *msg = logger->retain_message(tag);
-  msg->set("url", "https://github.com");
-  msg->set("port", 443);
-  logger->emit(msg);
-  std::string res_tag, res_ts, res_rec;
-  get_line(&res_tag, &res_ts, &res_rec);
-  EXPECT_EQ(res_tag, tag);
-  EXPECT_EQ(res_rec, "{\"port\":443,\"url\":\"https://github.com\"}");
-}
-
-
-TEST_F(FluentTest, QueueLimit) {
-  fluent::Logger *logger = new fluent::Logger("localhost", 24224);
-  logger->set_queue_limit(1);
-  const std::string tag = "test.http";
-
-  fluent::Message *msg = logger->retain_message(tag);
-  msg->set("url", "https://github.com");
-  msg->set("port", 443);
-  logger->emit(msg);
+class FluentTest : public ::testing::Test {
+private:
+  enum {
+    RP = 0, WP = 1
+  };
+  int pipe_fd_;
+  pid_t pid_;
   
-  std::string res_tag, res_ts, res_rec;
-  get_line(&res_tag, &res_ts, &res_rec);
-  EXPECT_EQ(res_tag, tag);
-  EXPECT_EQ(res_rec, "{\"port\":443,\"url\":\"https://github.com\"}");
-  this->stop_fluent();
+protected:
+  FILE *pipe_;
 
-  // First emit after stopping fluentd should be succeess because of buffer.
-  msg = logger->retain_message(tag);
-  msg->set("url", "https://github.com");
-  msg->set("port", 443);
-  EXPECT_TRUE(logger->emit(msg));
+  FluentTest();
+  virtual ~FluentTest();
 
-  // Second emit should be fail because buffer is full.
-  msg = logger->retain_message(tag);
-  msg->set("url", "https://github.com");
-  msg->set("port", 443);
-  EXPECT_FALSE(logger->emit(msg));
-}
+  virtual void SetUp();
+  virtual void TearDown();
+  void start_fluent();
+  void stop_fluent();
+  bool get_line(std::string *tag, std::string *ts, std::string *rec,
+                time_t timeout=10);
+};
 
+
+#endif   //  __TEST_FLUENTTEST_HPP__

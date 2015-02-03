@@ -25,6 +25,7 @@
  */
 
 // #include <regex>
+#include <fcntl.h>
 #include <string.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -32,52 +33,66 @@
 #include <signal.h>
 
 
+#include "./gtest.h"
 #include "./FluentTest.hpp"
-#include "../src/fluent/logger.hpp"
-#include "../src/fluent/message.hpp"
+#include "../src/fluent/emitter.hpp"
+
 #include "../src/debug.h"
 
 
-TEST_F(FluentTest, Logger) {
-  fluent::Logger *logger = new fluent::Logger("localhost", 24224);
-  const std::string tag = "test.http";
-  fluent::Message *msg = logger->retain_message(tag);
+TEST_F(FluentTest, InetEmitter) {
+  fluent::InetEmitter *e = new fluent::InetEmitter("localhost", 24224);
+  const std::string tag = "test.inet";
+  fluent::Message *msg = new fluent::Message(tag);
   msg->set("url", "https://github.com");
   msg->set("port", 443);
-  logger->emit(msg);
-  std::string res_tag, res_ts, res_rec;
-  get_line(&res_tag, &res_ts, &res_rec);
-  EXPECT_EQ(res_tag, tag);
-  EXPECT_EQ(res_rec, "{\"port\":443,\"url\":\"https://github.com\"}");
-}
 
-
-TEST_F(FluentTest, QueueLimit) {
-  fluent::Logger *logger = new fluent::Logger("localhost", 24224);
-  logger->set_queue_limit(1);
-  const std::string tag = "test.http";
-
-  fluent::Message *msg = logger->retain_message(tag);
-  msg->set("url", "https://github.com");
-  msg->set("port", 443);
-  logger->emit(msg);
+  // msg should be deleted by Emitter after sending
+  e->emit(msg);
   
   std::string res_tag, res_ts, res_rec;
-  get_line(&res_tag, &res_ts, &res_rec);
+  EXPECT_TRUE(get_line(&res_tag, &res_ts, &res_rec));
   EXPECT_EQ(res_tag, tag);
   EXPECT_EQ(res_rec, "{\"port\":443,\"url\":\"https://github.com\"}");
+  delete e;
+}
+
+
+TEST_F(FluentTest, InetEmitter_QueueLimit) {
+  fluent::InetEmitter *e = new fluent::InetEmitter("localhost", 24224);
+  std::string res_tag, res_ts, res_rec;
+  e->set_queue_limit(1);
+  const std::string tag = "test.inet";
+  fluent::Message *msg = new fluent::Message(tag);
+  msg->set("num", 0);
+  // msg should be deleted by Emitter after sending
+  e->emit(msg);
+  
+  ASSERT_TRUE(get_line(&res_tag, &res_ts, &res_rec));
+  EXPECT_EQ(res_tag, tag);
+  EXPECT_EQ(res_rec, "{\"num\":0}");
   this->stop_fluent();
 
-  // First emit after stopping fluentd should be succeess because of buffer.
-  msg = logger->retain_message(tag);
-  msg->set("url", "https://github.com");
-  msg->set("port", 443);
-  EXPECT_TRUE(logger->emit(msg));
+  // First emit after stopping fluentd should be succeess
+  // because of sending message.
+  msg = new fluent::Message(tag);
+  msg->set("num", 1);
+  EXPECT_TRUE(e->emit(msg));
+  ASSERT_FALSE(get_line(&res_tag, &res_ts, &res_rec, 3));
 
-  // Second emit should be fail because buffer is full.
-  msg = logger->retain_message(tag);
-  msg->set("url", "https://github.com");
-  msg->set("port", 443);
-  EXPECT_FALSE(logger->emit(msg));
+  // Second emit should be succeess because of storing message in buffer.
+  msg = new fluent::Message(tag);
+  msg->set("num", 2);
+  EXPECT_TRUE(e->emit(msg));
+  ASSERT_FALSE(get_line(&res_tag, &res_ts, &res_rec, 3));
+
+  // Third emit should be fail because buffer is full.
+  msg = new fluent::Message(tag);
+  msg->set("num", 3);
+  EXPECT_FALSE(e->emit(msg));
+  ASSERT_FALSE(get_line(&res_tag, &res_ts, &res_rec, 3));
+
+  delete e;  
 }
+
 
