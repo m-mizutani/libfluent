@@ -96,3 +96,33 @@ TEST_F(FluentTest, InetEmitter_QueueLimit) {
 }
 
 
+TEST(FileEmitter, basic) {
+  struct stat st;
+  const std::string fname = "fileemitter_test_output.msg";
+  const std::string tag = "test.file";
+  if (0 == ::stat(fname.c_str(), &st)) {
+    ASSERT_TRUE(0 == unlink(fname.c_str()));
+  }
+
+  fluent::FileEmitter *e = new fluent::FileEmitter(fname);
+  fluent::Message *msg = new fluent::Message(tag);
+  msgpack::sbuffer sbuf;
+  msgpack::packer<msgpack::sbuffer> pkr(&sbuf);
+  
+  msg->set("num", 1);
+  msg->set_ts(100000);
+  msg->to_msgpack(&pkr);
+  EXPECT_TRUE(e->emit(msg));
+  delete e;
+
+  ASSERT_EQ (0, ::stat(fname.c_str(), &st));
+  uint8_t buf[BUFSIZ];
+  int fd = ::open(fname.c_str(), O_RDONLY);
+  ASSERT_TRUE(fd > 0);
+  int readsize = ::read(fd, buf, sizeof(buf));
+  ASSERT_TRUE(readsize > 0);
+
+  EXPECT_EQ(sbuf.size(), readsize);
+  EXPECT_TRUE(0 == memcmp(sbuf.data(), buf, sbuf.size()));
+  
+}
