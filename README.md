@@ -8,7 +8,8 @@ to fluentd daemon directly.
 #include <fluent.hpp>
 	
 int main(int argc, char *argv[]) {
-  fluent::Logger *logger = new fluent::Logger("localhost", 24224);
+  fluent::Logger *logger = new fluent::Logger();
+  logger->new_forward("localhost", 24224);
 	  
   // Emit log:
   //  tag: "tag.http"
