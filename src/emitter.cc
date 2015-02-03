@@ -125,6 +125,8 @@ namespace fluent {
     }
 
     Message *root;
+    bool abort_loop = false;
+    
     while (nullptr != (root = this->queue_.pop())) {
       for(Message *msg = root; msg; msg = msg->next()) {
         msgpack::sbuffer buf;
@@ -135,11 +137,16 @@ namespace fluent {
         while(!this->sock_->send(buf.data(), buf.size())) {
           // std::cerr << "socket error: " << this->sock_->errmsg() << std::endl;
           if (!this->connect()) {
+            abort_loop = true;
             break;
           }
         }
-        debug(false, "sent %p", msg);
 
+        if (abort_loop) {
+          break;
+        }
+        
+        debug(false, "sent %p", msg);
       }
       delete root;
     }
