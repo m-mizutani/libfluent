@@ -27,9 +27,13 @@
 #include <sstream>
 #include <iostream>
 #include <msgpack.hpp>
+#include <sys/types.h>
+#include <sys/stat.h>
+#include <fcntl.h>
 #include <assert.h>
 #include <math.h>
 #include <unistd.h>
+#include <errno.h>
 
 #include "./fluent/emitter.hpp"
 #include "./debug.h"
@@ -65,7 +69,7 @@ namespace fluent {
   }
 
   // ----------------------------------------------------------------
-  // SocketEmitter
+  // InetEmitter
   const int InetEmitter::WAIT_MAX = 120 * 1000;
 
   InetEmitter::InetEmitter(const std::string &host, int port) :
@@ -114,7 +118,7 @@ namespace fluent {
 
     while (true) {
       Message *root = this->queue_.pop();
-      for(Message *msg = root; msg; msg = root->next()) {
+      for(Message *msg = root; msg; msg = msg->next()) {
         msgpack::sbuffer buf;
         msgpack::packer <msgpack::sbuffer> pk(&buf);
         msg->to_msgpack(&pk);
@@ -124,11 +128,50 @@ namespace fluent {
           this->connect(); // TODO: handle failure of retry
         }
 
-        delete root;
       }
+      delete root;
     }
   }
 
+  // ----------------------------------------------------------------
+  // FileEmitter
+  FileEmitter::FileEmitter(const std::string &fname) :
+    Emitter(), enabled_(false) {
+    // Setup socket.
+
+    this->fd_ = ::open(fname.c_str(), O_WRONLY | O_CREAT | O_APPEND, 0644);
+    if (this->fd_ < 0) {
+      this->set_errmsg(strerror(errno));
+    } else {
+      this->enabled_ = true;
+      this->run_worker();
+    }
+  }
+  FileEmitter::~FileEmitter() {
+    if (this->enabled_) {
+      ::close(this->fd_);
+    }
+  }
+
+  void FileEmitter::worker() {
+    assert(this->enabled_);
+    
+    while (true) {
+      Message *root = this->queue_.pop();
+      for(Message *msg = root; msg; msg = msg->next()) {
+        msgpack::sbuffer buf;
+        msgpack::packer <msgpack::sbuffer> pk(&buf);
+        msg->to_msgpack(&pk);
+
+        int rc = ::write(this->fd_, buf.data(), buf.size());
+        if (rc < 0) {
+          this->set_errmsg(strerror(errno));
+        }
+      }
+      delete root;
+    }
+  }
+  
   // ----------------------------------------------------------------
   // MsgQueue
   MsgQueue::MsgQueue() : msg_head_(nullptr), msg_tail_(nullptr),

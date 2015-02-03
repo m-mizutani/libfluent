@@ -89,6 +89,17 @@ namespace fluent {
     ~InetEmitter();
     void worker();
   };
+
+  class FileEmitter : public Emitter {
+  private:
+    int fd_;
+    bool enabled_;
+  public:
+    FileEmitter(const std::string &fname);
+    ~FileEmitter();
+    void worker();
+  };
+  
 }
 
 
