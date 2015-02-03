@@ -28,17 +28,17 @@ int main(int argc, char *argv[]) {
 Prerequisite
 --------------
 
-- C++11
-- libmsgpack
-- fluentd (for test)
+- C++11 compiler
+- libmsgpack >= 0.5.9
+- ruby, fluentd, msgpack-ruby (for test)
 
 Functions
 --------------
 
 - Support nested message such as `{"a": {"b": {"c": 3}}}`
 - Support array in message such as `{"a": [1, 2, 3]}`
-- Support multithread buffering 
-- Reconnect when disconnected (under development)
+- Asynchronous emitting and buffering
+- Reconnect when disconnected
 - Exponential backoff for reconnect
 
 Examples
