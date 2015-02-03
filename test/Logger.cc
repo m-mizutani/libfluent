@@ -39,7 +39,9 @@
 
 
 TEST_F(FluentTest, Logger) {
-  fluent::Logger *logger = new fluent::Logger("localhost", 24224);
+  fluent::Logger *logger = new fluent::Logger();
+  logger->new_forward("localhost", 24224);
+  
   const std::string tag = "test.http";
   fluent::Message *msg = logger->retain_message(tag);
   msg->set("url", "https://github.com");
@@ -53,7 +55,9 @@ TEST_F(FluentTest, Logger) {
 
 
 TEST_F(FluentTest, QueueLimit) {
-  fluent::Logger *logger = new fluent::Logger("localhost", 24224);
+  fluent::Logger *logger = new fluent::Logger();
+  logger->new_forward("localhost", 24224);
+
   logger->set_queue_limit(1);
   const std::string tag = "test.http";
 

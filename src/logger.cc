@@ -36,21 +36,28 @@
 #include "./debug.h"
 
 namespace fluent {
-  const int Logger::WAIT_MAX = 120 * 1000;
-  Logger::Logger(const std::string &host, int port) :
-    host_(host),
-    port_(port),
-    retry_max_(20)
-  {
-    this->emitter_ = new InetEmitter(host, port);
+  Logger::Logger() {
   }
   Logger::~Logger() {
     // delete not used messages.
     for (auto it = this->msg_set_.begin(); it != this->msg_set_.end(); it++) {
       delete *it;
     }
+    for (size_t i = 0; i < this->emitter_.size(); i++) {
+      delete this->emitter_[i];
+    }
   }
 
+  void Logger::new_forward(const std::string &host, int port) {
+    Emitter *e = new InetEmitter(host, port);
+    this->emitter_.push_back(e);
+  }
+  void Logger::new_dumpfile(const std::string &fname) {
+    Emitter *e = new FileEmitter(fname);
+    this->emitter_.push_back(e);
+  }
+
+  
   Message* Logger::retain_message(const std::string &tag) {
     Message *msg = new Message(tag);
     this->msg_set_.insert(msg);
@@ -66,11 +73,17 @@ namespace fluent {
     }
 
     this->msg_set_.erase(msg);
-    return this->emitter_->emit(msg);
+    bool rc = true;
+    for (size_t i = 0; i < this->emitter_.size(); i++) {
+      rc &= this->emitter_[i]->emit(msg);
+    }
+    return rc;
   }
 
   void Logger::set_queue_limit(size_t limit) {
-    this->emitter_->set_queue_limit(limit);
+    for (size_t i = 0; i < this->emitter_.size(); i++) {
+      this->emitter_[i]->set_queue_limit(limit);
+    }
   }
 
 }

@@ -41,7 +41,8 @@ int main(int argc, char *argv[]) {
   int port = std::stoi(argv[2]);
   int mps  = std::stoi(argv[3]);
 
-  fluent::Logger *logger = new fluent::Logger(host, port);
+  fluent::Logger *logger = new fluent::Logger();
+  logger->new_forward(host, port);
 
   int wait = 1000000 / mps;
   time_t last_ts = time(nullptr);
