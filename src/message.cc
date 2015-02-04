@@ -59,7 +59,14 @@ namespace fluent {
   bool Message::del(const std::string &key){
     return this->root_.del(key);
   }
+  Message::Map* Message::retain_map(const std::string &key) {
+    return this->root_.retain_map(key);
+  }
+  Message::Array* Message::retain_array(const std::string &key) { 
+    return this->root_.retain_array(key);
+  }
 
+  
   void Message::to_msgpack(msgpack::packer<msgpack::sbuffer> *pk) const {
     pk->pack_array(3);          // [?, ?, ?]
     pk->pack(this->tag_);       // [tag, ?, ?]
