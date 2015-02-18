@@ -24,14 +24,6 @@ int main(int argc, char *argv[]) {
 }
 ```
 
-
-Prerequisite
---------------
-
-- C++11 compiler
-- libmsgpack >= 0.5.9
-- ruby, fluentd, msgpack-ruby (for test)
-
 Functions
 --------------
 
@@ -40,6 +32,23 @@ Functions
 - Asynchronous emitting and buffering
 - Reconnect when disconnected
 - Exponential backoff for reconnect
+
+
+Prerequisite
+--------------
+
+- C++11 compiler
+- libmsgpack >= 0.5.9
+- ruby, fluentd, msgpack-ruby (for test)
+
+Install
+--------------
+
+```shell
+% cmake .
+% make
+% sudo make install
+```
 
 Examples
 --------------
