@@ -74,8 +74,19 @@ namespace fluent {
       virtual void to_msgpack(msgpack::packer<msgpack::sbuffer> *pk) 
         const = 0;
       virtual bool has_value() const { return true; }
-
+      template <typename T> const T& as() const {
+        const T* ptr = dynamic_cast<const T*>(this);
+        if (ptr) {
+          return *ptr;
+        } else {
+          throw "type error";
+        }
       }
+      template <typename T> const T& is() const {
+        const T* ptr = dynamic_cast<const T*>(this);
+        return (ptr != nullptr);
+      }
+      
     };
 
     // To present "key not found" for Map and "out of range" for Array.

@@ -24,11 +24,54 @@
  * POSSIBILITY OF SUCH DAMAGE.
  */
 
-#ifndef __FLUENT_HPP__
-#define __FLUENT_HPP__
+#ifndef __SRC_FLUENT_EXCEPTION_HPP__
+#define __SRC_FLUENT_EXCEPTION_HPP__
 
-#include "./fluent/logger.hpp"
-#include "./fluent/message.hpp"
-#include "./fluent/exception.hpp"
+#include <exception>
+#include <sstream>
 
-#endif
+namespace fluent {
+  namespace Exception {
+    class TypeError : public std::exception {
+    private:
+      std::string errmsg_;
+    public:
+      TypeError(const std::string &errmsg) : errmsg_(errmsg) {}
+      ~TypeError() {}
+      virtual const char* what() const throw() {
+        return this->errmsg_.c_str();
+      }
+    };
+
+    class IndexError : public std::exception {
+    private:
+      size_t idx_, max_;
+    public:
+      IndexError(size_t idx, size_t max) : idx_(idx), max_(max) {}
+      ~IndexError() {}
+      virtual const char* what() const throw() {
+        std::stringstream ss;
+        ss << "out of range: " << this->idx_ << ", should < " <<
+          this->max_;
+        return ss.str().c_str();
+      }
+    };
+
+    class KeyError : public std::exception {
+    private:
+      std::string key_;
+    public:
+      KeyError(const std::string &key) : key_(key) {}
+      ~KeyError() {}
+      virtual const char* what() const throw() {
+        std::stringstream ss;
+        ss << "key \"" << this->key_ << "\" is not found";
+        return ss.str().c_str();
+      }
+    };
+    
+  }
+}
+  
+
+#endif   // __SRC_FLUENT_EXCEPTION_H__

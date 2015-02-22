@@ -91,6 +91,7 @@ namespace fluent {
 
 
   const Message::NoValueObject Message::NoValue;
+    
   
   const bool Message::Map::DBG(false);
   Message::Map::Map() {
