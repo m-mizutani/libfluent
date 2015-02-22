@@ -90,6 +90,7 @@ namespace fluent {
 
 
 
+  const Message::NoValueObject Message::NoValue;
   
   const bool Message::Map::DBG(false);
   Message::Map::Map() {
@@ -199,6 +200,16 @@ namespace fluent {
     }    
   }
 
+  const Message::Object& Message::Map::get(const std::string &key) const {
+    auto it = this->map_.find(key);
+    if (it == this->map_.end()) {
+      return Message::NoValue;
+    } else {
+      return *(it->second);
+    }
+  }
+  
+  
   void Message::Map::to_msgpack(msgpack::packer<msgpack::sbuffer> *pk)
     const {
     pk->pack_map(this->map_.size());

@@ -29,12 +29,18 @@
 
 #include <msgpack.hpp>
 #include <map>
+#include <assert.h>
 
 namespace fluent {
   class Message {
   public:
     class Array;
     class Map;
+    class String;
+    class Fixnum;
+    class Float;
+    class Bool;
+    
     Message(const std::string &tag);
     ~Message();
     
@@ -67,7 +73,21 @@ namespace fluent {
       virtual ~Object() {}
       virtual void to_msgpack(msgpack::packer<msgpack::sbuffer> *pk) 
         const = 0;
+      virtual bool has_value() const { return true; }
+
+      }
     };
+
+    // To present "key not found" for Map and "out of range" for Array.
+    class NoValueObject : public Object {
+    public:
+      NoValueObject() {};
+      ~NoValueObject() {};
+      void to_msgpack(msgpack::packer<msgpack::sbuffer> *pk) const
+      { assert(0); };
+      bool has_value() const { return false; }
+    };   
+    static const NoValueObject NoValue;
 
     class Map : public Object {
     private:
@@ -84,6 +104,7 @@ namespace fluent {
       bool set(const std::string &key, double val);
       bool set(const std::string &key, bool val);
       bool del(const std::string &key);
+      const Object& get(const std::string &key) const;
       void to_msgpack(msgpack::packer<msgpack::sbuffer> *pk) const;
     };
 
@@ -99,6 +120,8 @@ namespace fluent {
       void push(int val);
       void push(double val);
       void push(bool val);
+      size_t size() const;
+      const Object& get(size_t idx) const;
       void to_msgpack(msgpack::packer<msgpack::sbuffer> *pk) const;
     };
 
@@ -109,6 +132,7 @@ namespace fluent {
       String(const std::string &val);
       String(const char *val);
       void to_msgpack(msgpack::packer<msgpack::sbuffer> *pk) const;
+      const std::string &val();
     };
 
     class Fixnum : public Object {

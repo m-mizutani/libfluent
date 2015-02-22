@@ -195,3 +195,12 @@ TEST_F(MessageTest, NotOverwriteMap) {
 TEST(Message, link) {
   // TODO: add tests
 }
+
+TEST(Message, GetObject) {
+  fluent::Message::Map *obj = new fluent::Message::Map();
+  obj->set("a", 1);
+  const fluent::Message::Object &a = obj->get("a");
+  const fluent::Message::Object &b = obj->get("b");
+  EXPECT_TRUE(a.has_value());
+  EXPECT_FALSE(b.has_value());
+}
