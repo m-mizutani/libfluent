@@ -31,6 +31,7 @@
 #include <signal.h>
 #include "./gtest.h"
 #include "../src/fluent/message.hpp"
+#include "../src/fluent/exception.hpp"
 #include "../src/debug.h"
 
 class MessageTest : public ::testing::Test {
@@ -196,11 +197,66 @@ TEST(Message, link) {
   // TODO: add tests
 }
 
-TEST(Message, GetObject) {
+TEST(Message, MapGetObject) {
   fluent::Message::Map *obj = new fluent::Message::Map();
-  obj->set("a", 1);
-  const fluent::Message::Object &a = obj->get("a");
-  const fluent::Message::Object &b = obj->get("b");
-  EXPECT_TRUE(a.has_value());
-  EXPECT_FALSE(b.has_value());
+  obj->set("i", 1);
+  obj->set("s", "test");
+  obj->set("f", 3.141592);
+  obj->set("b", true);
+  fluent::Message::Map *map = obj->retain_map("m");
+  map->set("gnome", 1);
+  fluent::Message::Array *arr = obj->retain_array("a");
+  arr->push("druid");
+  
+  // Check Key.
+  EXPECT_TRUE(obj->has_key("i"));
+  EXPECT_TRUE(obj->has_key("s"));
+  EXPECT_TRUE(obj->has_key("f"));
+  EXPECT_TRUE(obj->has_key("b"));
+  EXPECT_TRUE(obj->has_key("m"));
+  EXPECT_TRUE(obj->has_key("a"));
+  EXPECT_FALSE(obj->has_key("x"));
+
+  // Get objects.
+  const fluent::Message::Object &obj_i = obj->get("i");
+  const fluent::Message::Object &obj_s = obj->get("s");
+  const fluent::Message::Object &obj_f = obj->get("f");
+  const fluent::Message::Object &obj_b = obj->get("b");
+  const fluent::Message::Object &obj_m = obj->get("m");
+  const fluent::Message::Object &obj_a = obj->get("a");
+  EXPECT_THROW(obj->get("x"), fluent::Exception::KeyError);  
+
+  // Check types.
+  EXPECT_TRUE(obj_i.is<fluent::Message::Fixnum>());
+  EXPECT_TRUE(obj_s.is<fluent::Message::String>());
+  EXPECT_TRUE(obj_f.is<fluent::Message::Float>());
+  EXPECT_TRUE(obj_b.is<fluent::Message::Bool>());
+  EXPECT_TRUE(obj_m.is<fluent::Message::Map>());
+  EXPECT_TRUE(obj_a.is<fluent::Message::Array>());
+  
+  // Convert to appropriate type.
+  const fluent::Message::Fixnum &i = obj_i.as<fluent::Message::Fixnum>();
+  const fluent::Message::String &s = obj_s.as<fluent::Message::String>();
+  const fluent::Message::Float &f = obj_f.as<fluent::Message::Float>();
+  const fluent::Message::Bool &b = obj_b.as<fluent::Message::Bool>();
+  const fluent::Message::Map &m = obj_m.as<fluent::Message::Map>();
+  const fluent::Message::Array &a = obj_a.as<fluent::Message::Array>();
+  EXPECT_THROW(obj_i.as<fluent::Message::String>(),
+               fluent::Exception::TypeError);
+  EXPECT_THROW(obj_i.as<fluent::Message::Float>(),
+               fluent::Exception::TypeError);
+
+  // Check values.
+  EXPECT_EQ(i.val(), 1);
+  EXPECT_EQ(s.val(), "test");
+  EXPECT_EQ(f.val(), 3.141592);
+  EXPECT_EQ(b.val(), true);
+  
+  EXPECT_TRUE(m.has_key("gnome"));
+  EXPECT_FALSE(m.has_key("x"));
+  EXPECT_EQ(m.get("gnome").as<fluent::Message::Fixnum>().val(), 1);
+  EXPECT_EQ(a.size(), 1);
+  EXPECT_EQ(a.get(0).as<fluent::Message::String>().val(), "druid");
+
+  EXPECT_THROW(a.get(1), fluent::Exception::IndexError);
 }

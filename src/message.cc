@@ -90,8 +90,6 @@ namespace fluent {
 
 
 
-  const Message::NoValueObject Message::NoValue;
-    
   
   const bool Message::Map::DBG(false);
   Message::Map::Map() {
@@ -204,7 +202,7 @@ namespace fluent {
   const Message::Object& Message::Map::get(const std::string &key) const {
     auto it = this->map_.find(key);
     if (it == this->map_.end()) {
-      return Message::NoValue;
+      throw Exception::KeyError(key);
     } else {
       return *(it->second);
     }
@@ -261,6 +259,13 @@ namespace fluent {
     return arr;
   }
 
+  const Message::Object& Message::Array::get(size_t idx) const {
+    if (idx < this->array_.size()) {
+      return *(this->array_[idx]);
+    } else {
+      throw Exception::IndexError(idx, this->array_.size());
+    }
+  }
 
 
   Message::Fixnum::Fixnum(int val) : val_(val) {}
