@@ -199,6 +199,16 @@ namespace fluent {
     }    
   }
 
+  const Message::Object& Message::Map::get(const std::string &key) const {
+    auto it = this->map_.find(key);
+    if (it == this->map_.end()) {
+      throw Exception::KeyError(key);
+    } else {
+      return *(it->second);
+    }
+  }
+  
+  
   void Message::Map::to_msgpack(msgpack::packer<msgpack::sbuffer> *pk)
     const {
     pk->pack_map(this->map_.size());
@@ -249,6 +259,13 @@ namespace fluent {
     return arr;
   }
 
+  const Message::Object& Message::Array::get(size_t idx) const {
+    if (idx < this->array_.size()) {
+      return *(this->array_[idx]);
+    } else {
+      throw Exception::IndexError(idx, this->array_.size());
+    }
+  }
 
 
   Message::Fixnum::Fixnum(int val) : val_(val) {}

@@ -29,12 +29,19 @@
 
 #include <msgpack.hpp>
 #include <map>
+#include <assert.h>
+#include "./exception.hpp"
 
 namespace fluent {
   class Message {
   public:
     class Array;
     class Map;
+    class String;
+    class Fixnum;
+    class Float;
+    class Bool;
+    
     Message(const std::string &tag);
     ~Message();
     
@@ -67,6 +74,22 @@ namespace fluent {
       virtual ~Object() {}
       virtual void to_msgpack(msgpack::packer<msgpack::sbuffer> *pk) 
         const = 0;
+      virtual bool has_value() const { return true; }
+      template <typename T> const T& as() const {
+        const T* ptr = dynamic_cast<const T*>(this);
+        if (ptr) {
+          return *ptr;
+        } else {
+          std::string msg = "Can not convert to ";
+          msg += typeid(T).name();
+          throw Exception::TypeError(msg);
+        }
+      }
+      template <typename T> bool is() const {
+        const T* ptr = dynamic_cast<const T*>(this);
+        return (ptr != nullptr);
+      }
+      
     };
 
     class Map : public Object {
@@ -84,6 +107,10 @@ namespace fluent {
       bool set(const std::string &key, double val);
       bool set(const std::string &key, bool val);
       bool del(const std::string &key);
+      bool has_key(const std::string &key) const {
+        return (this->map_.find(key) != this->map_.end());
+      }
+      const Object& get(const std::string &key) const;
       void to_msgpack(msgpack::packer<msgpack::sbuffer> *pk) const;
     };
 
@@ -99,6 +126,8 @@ namespace fluent {
       void push(int val);
       void push(double val);
       void push(bool val);
+      size_t size() const { return this->array_.size(); }
+      const Object& get(size_t idx) const;
       void to_msgpack(msgpack::packer<msgpack::sbuffer> *pk) const;
     };
 
@@ -109,6 +138,7 @@ namespace fluent {
       String(const std::string &val);
       String(const char *val);
       void to_msgpack(msgpack::packer<msgpack::sbuffer> *pk) const;
+      const std::string &val() const { return this->val_; }
     };
 
     class Fixnum : public Object {
@@ -117,6 +147,7 @@ namespace fluent {
     public:
       Fixnum(int val);
       void to_msgpack(msgpack::packer<msgpack::sbuffer> *pk) const;
+      int val() const { return this->val_; }
     };
 
     class Float : public Object {
@@ -125,6 +156,7 @@ namespace fluent {
     public:
       Float(double val);
       void to_msgpack(msgpack::packer<msgpack::sbuffer> *pk) const;
+      double val() const { return this->val_; }
     };
 
     class Bool : public Object {
@@ -133,6 +165,7 @@ namespace fluent {
     public:
       Bool(bool val);
       void to_msgpack(msgpack::packer<msgpack::sbuffer> *pk) const;
+      bool val() const { return this->val_; }
     };
 
   private:    
