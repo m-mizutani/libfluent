@@ -42,7 +42,7 @@ namespace fluent {
     size_t count_;
     size_t limit_;
     bool term_;
-
+    
   public:
     MsgQueue();
     ~MsgQueue();

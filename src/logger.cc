@@ -56,7 +56,7 @@ namespace fluent {
     Emitter *e = new FileEmitter(fname);
     this->emitter_.push_back(e);
   }
-
+  
   
   Message* Logger::retain_message(const std::string &tag) {
     Message *msg = new Message(tag);

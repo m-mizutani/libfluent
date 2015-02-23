@@ -53,7 +53,7 @@ namespace fluent {
     Emitter();
     virtual ~Emitter();
     void set_queue_limit(size_t limit);
-    bool emit(Message *msg);
+    virtual bool emit(Message *msg);
     const std::string& errmsg() const { return this->errmsg_; }
   };
 
@@ -79,6 +79,16 @@ namespace fluent {
     FileEmitter(const std::string &fname);
     ~FileEmitter();
     void worker();
+  };
+
+  class QueueEmitter : public Emitter {
+  private:
+    MsgQueue *q_;
+  public:
+    QueueEmitter(MsgQueue *q);
+    ~QueueEmitter();
+    void worker();
+    bool emit(Message *msg);    
   };
   
 }

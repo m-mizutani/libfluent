@@ -43,8 +43,9 @@ namespace fluent {
   // MsgQueue
   const bool MsgQueue::DBG = false;
   
-  MsgQueue::MsgQueue() : msg_head_(nullptr), msg_tail_(nullptr),
-                         count_(0), limit_(1000), term_(false) {
+  MsgQueue::MsgQueue() :
+    msg_head_(nullptr), msg_tail_(nullptr),
+    count_(0), limit_(1000), term_(false) {
     // Setup pthread.
     ::pthread_mutex_init(&(this->mutex_), NULL);
     ::pthread_cond_init(&(this->cond_), NULL);

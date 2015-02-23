@@ -194,5 +194,18 @@ namespace fluent {
       delete root;
     }
   }
+
+
+  // ----------------------------------------------------------------
+  // FileEmitter
+  QueueEmitter::QueueEmitter(MsgQueue *q) : q_(q) {
+  }
+  QueueEmitter::~QueueEmitter() {
+  }
+  void QueueEmitter::worker() {    
+  } 
+  bool QueueEmitter::emit(Message *msg) {
+    return false;
+  }
   
 }

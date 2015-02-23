@@ -29,6 +29,7 @@
 
 #include "./fluent/logger.hpp"
 #include "./fluent/message.hpp"
+#include "./fluent/queue.hpp"
 #include "./fluent/exception.hpp"
 
 #endif
