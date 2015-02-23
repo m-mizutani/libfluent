@@ -24,64 +24,40 @@
  * POSSIBILITY OF SUCH DAMAGE.
  */
 
-#ifndef __FLUENT_EMITTER_HPP__
-#define __FLUENT_EMITTER_HPP__
+#ifndef __FLUENT_QUEUE_HPP__
+#define __FLUENT_QUEUE_HPP__
 
 #include <string>
 #include <pthread.h>
-#include "./socket.hpp"
-#include "./queue.hpp"
+#include "./message.hpp"
 
 namespace fluent {
-  class Emitter {
+  class MsgQueue {
   private:
-    pthread_t th_;
-    std::string errmsg_;
+    static const bool DBG;
+    pthread_mutex_t mutex_;
+    pthread_cond_t cond_;
+    Message *msg_head_;
+    Message *msg_tail_;
+    size_t count_;
+    size_t limit_;
+    bool term_;
+
+  public:
+    MsgQueue();
+    ~MsgQueue();
+    bool push(Message *msg);
+    Message *pop();
+    void term();
+    bool is_term();
     
-    static void* run_thread(void *obj);
-    virtual void worker() = 0;
-    
-  protected:
-    MsgQueue queue_;
-    void set_errmsg(const std::string &errmsg) {
-      this->errmsg_ = errmsg;
-    }
-    void start_worker();
-    void stop_worker();
-
-  public:
-    Emitter();
-    virtual ~Emitter();
-    void set_queue_limit(size_t limit);
-    bool emit(Message *msg);
-    const std::string& errmsg() const { return this->errmsg_; }
-  };
-
-  class InetEmitter : public Emitter {
-  private:
-    static const int WAIT_MAX;
-
-    Socket *sock_;
-    size_t retry_limit_;
-    bool connect();
-
-  public:
-    InetEmitter(const std::string &host, int port);
-    ~InetEmitter();
-    void worker();
-  };
-
-  class FileEmitter : public Emitter {
-  private:
-    int fd_;
-    bool enabled_;
-  public:
-    FileEmitter(const std::string &fname);
-    ~FileEmitter();
-    void worker();
+    void set_limit(size_t limit);
+    // count_ may be critical section, however the function is read only
+    // and integer can be read atomically in x86 arch.
+    size_t count() const { return this->count_; };    
   };
   
 }
 
 
-#endif   // __SRC_FLUENT_EMITTER_H__
+#endif   // __SRC_FLUENT_QUEUE_H__
