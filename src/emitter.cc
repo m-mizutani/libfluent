@@ -203,9 +203,10 @@ namespace fluent {
   QueueEmitter::~QueueEmitter() {
   }
   void QueueEmitter::worker() {    
+    // nothing to do.
   } 
   bool QueueEmitter::emit(Message *msg) {
-    return false;
+    return this->q_->push(msg);
   }
   
 }

@@ -45,23 +45,14 @@ namespace fluent {
   
   MsgQueue::MsgQueue() :
     msg_head_(nullptr), msg_tail_(nullptr),
-    count_(0), limit_(1000), term_(false) {
-    // Setup pthread.
-    ::pthread_mutex_init(&(this->mutex_), NULL);
-    ::pthread_cond_init(&(this->cond_), NULL);
+    count_(0), limit_(1000) {
   }
   MsgQueue::~MsgQueue() {
   }
   bool MsgQueue::push(Message *msg) {
     bool rc = true;
 
-    ::pthread_mutex_lock (&(this->mutex_));
-    debug(DBG, "entered lock");
-
-    debug(DBG, "PUSH: count:%lu, limit:%lu", this->count_, this->limit_);
-    if (this->term_) {
-      // do not accept more msg because working thread going to shutdown.
-    } else if (this->count_ < this->limit_) {
+    if (this->count_ < this->limit_) {
       if (this->msg_head_) {
         assert(this->msg_tail_);
         this->msg_tail_->attach(msg);
@@ -70,43 +61,19 @@ namespace fluent {
       }
       this->msg_tail_ = msg;
       this->count_++;
-      debug(DBG, "send signal");
-      ::pthread_cond_signal (&(this->cond_));
     } else {
       // queue is full.
       rc = false;
     }
-    debug(DBG, "PUSHED: count:%lu, limit:%lu", this->count_, this->limit_);
-    
-    ::pthread_mutex_unlock (&(this->mutex_));
-    debug(DBG, "left lock");
     
     return rc;
   }
+  
   Message* MsgQueue::pop() {
     Message *msg;
     
-    debug(DBG, "entering lock");
-    ::pthread_mutex_lock(&(this->mutex_));
-    debug(DBG, "entered lock");
-
-    
     if (this->msg_head_ == nullptr) {
-      if (this->term_) {
-        // Going to shutdown the thread.
-        ::pthread_mutex_unlock(&(this->mutex_));
-        return nullptr;
-      }
-      
-      debug(DBG, "entered wait");
-      ::pthread_cond_wait(&(this->cond_), &(this->mutex_));
-      debug(DBG, "left wait");
-
-      if (this->term_ && this->msg_head_ == nullptr) {
-        // Going to shutdown the thread.
-        ::pthread_mutex_unlock(&(this->mutex_));
-        return nullptr;
-      }
+      return nullptr;
     }
 
     assert(this->count_ > 0);
@@ -114,12 +81,81 @@ namespace fluent {
     this->msg_head_ = this->msg_tail_ = nullptr;
     this->count_ = 0;
     
+    return msg;
+  }
+  
+  void MsgQueue::set_limit(size_t limit) {
+    this->limit_ = limit;
+  }
+
+
+  // ----------------------------------------------
+  const bool MsgThreadQueue::DBG = true;
+
+  MsgThreadQueue::MsgThreadQueue() : term_(false) {
+    // Setup pthread.
+    ::pthread_mutex_init(&(this->mutex_), NULL);
+    ::pthread_cond_init(&(this->cond_), NULL);
+  }
+  MsgThreadQueue::~MsgThreadQueue() {
+  }
+  bool MsgThreadQueue::push(Message *msg) {
+    bool rc = true;
+    
+    ::pthread_mutex_lock (&(this->mutex_));
+    debug(DBG, "entered lock");
+
+    debug(DBG, "PUSH: count:%lu, limit:%lu", this->count(), this->limit());
+    if (this->term_) {
+      // do not accept more msg because working thread going to shutdown.
+    } else {
+      rc = this->MsgQueue::push(msg);
+    }
+    debug(DBG, "PUSHED: count:%lu, limit:%lu", this->count(), this->limit());
+    
+    ::pthread_mutex_unlock (&(this->mutex_));
+    debug(DBG, "left lock");
+    
+    return rc;
+  }
+  Message* MsgThreadQueue::pop() {
+    Message *msg;
+    
+    debug(DBG, "entering lock");
+    ::pthread_mutex_lock(&(this->mutex_));
+    debug(DBG, "entered lock");
+
+    msg = this->MsgQueue::pop();
+    if (msg != nullptr) {
+      ::pthread_mutex_unlock(&(this->mutex_));
+      return msg;
+    }
+
+    if (this->term_) {
+      // Going to shutdown the thread.
+      ::pthread_mutex_unlock(&(this->mutex_));
+      debug(DBG, "going to shutdown, leave");
+      return nullptr;
+    }
+      
+    debug(DBG, "entered wait");
+    ::pthread_cond_wait(&(this->cond_), &(this->mutex_));
+    debug(DBG, "left wait");
+
+    msg = this->MsgQueue::pop();
     ::pthread_mutex_unlock(&(this->mutex_));
+    if (msg) {
+      debug(DBG, "poped (%p)", msg);
+    } else {
+      debug(DBG, "no data");
+    }
+
     debug(DBG, "left lock");
 
     return msg;
   }
-  void MsgQueue::term() {
+
+  void MsgThreadQueue::term() {
     // Sending terminate signal to worker thread.
     ::pthread_mutex_lock(&(this->mutex_));
     this->term_ = true;
@@ -128,7 +164,7 @@ namespace fluent {
     debug(DBG, "sent terminate");
   }
 
-  bool MsgQueue::is_term() {
+  bool MsgThreadQueue::is_term() {
     bool rc;
     ::pthread_mutex_lock(&(this->mutex_));
     rc = this->term_;
@@ -137,10 +173,10 @@ namespace fluent {
     return rc;
   }
   
-  void MsgQueue::set_limit(size_t limit) {
+  void MsgThreadQueue::set_limit(size_t limit) {
     ::pthread_mutex_lock(&(this->mutex_));
-    this->limit_ = limit;
+    this->MsgQueue::set_limit(limit);
     ::pthread_mutex_unlock(&(this->mutex_));    
   }
-
+  
 }

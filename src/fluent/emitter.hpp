@@ -42,7 +42,7 @@ namespace fluent {
     virtual void worker() = 0;
     
   protected:
-    MsgQueue queue_;
+    MsgThreadQueue queue_;
     void set_errmsg(const std::string &errmsg) {
       this->errmsg_ = errmsg;
     }

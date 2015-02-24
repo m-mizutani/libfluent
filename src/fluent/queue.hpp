@@ -35,28 +35,40 @@ namespace fluent {
   class MsgQueue {
   private:
     static const bool DBG;
-    pthread_mutex_t mutex_;
-    pthread_cond_t cond_;
     Message *msg_head_;
     Message *msg_tail_;
     size_t count_;
     size_t limit_;
+
+  public:
+    MsgQueue();
+    virtual ~MsgQueue();
+    virtual bool push(Message *msg);
+    virtual Message *pop();    
+    virtual void set_limit(size_t limit);
+    // count_ may be critical section, however the function is read only
+    // and integer can be read atomically in x86 arch.
+    size_t count() const { return this->count_; }; 
+    size_t limit() const { return this->limit_; };
+  };
+
+  class MsgThreadQueue : public MsgQueue {
+  private:
+    static const bool DBG;
+    pthread_mutex_t mutex_;
+    pthread_cond_t cond_;
     bool term_;
     
   public:
-    MsgQueue();
-    ~MsgQueue();
+    MsgThreadQueue();
+    ~MsgThreadQueue();
     bool push(Message *msg);
     Message *pop();
-    void term();
-    bool is_term();
-    
     void set_limit(size_t limit);
-    // count_ may be critical section, however the function is read only
-    // and integer can be read atomically in x86 arch.
-    size_t count() const { return this->count_; };    
+    
+    void term();
+    bool is_term();    
   };
-  
 }
 
 
