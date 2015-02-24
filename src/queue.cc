@@ -90,7 +90,7 @@ namespace fluent {
 
 
   // ----------------------------------------------
-  const bool MsgThreadQueue::DBG = true;
+  const bool MsgThreadQueue::DBG = false;
 
   MsgThreadQueue::MsgThreadQueue() : term_(false) {
     // Setup pthread.
@@ -110,6 +110,7 @@ namespace fluent {
       // do not accept more msg because working thread going to shutdown.
     } else {
       rc = this->MsgQueue::push(msg);
+      ::pthread_cond_signal (&(this->cond_));
     }
     debug(DBG, "PUSHED: count:%lu, limit:%lu", this->count(), this->limit());
     
@@ -127,6 +128,7 @@ namespace fluent {
 
     msg = this->MsgQueue::pop();
     if (msg != nullptr) {
+      debug(DBG, "poped before wait (%p)", msg);
       ::pthread_mutex_unlock(&(this->mutex_));
       return msg;
     }
