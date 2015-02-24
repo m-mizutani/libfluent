@@ -30,34 +30,9 @@
 #include <string>
 #include <pthread.h>
 #include "./socket.hpp"
-#include "./message.hpp"
+#include "./queue.hpp"
 
 namespace fluent {
-  class MsgQueue {
-  private:
-    static const bool DBG;
-    pthread_mutex_t mutex_;
-    pthread_cond_t cond_;
-    Message *msg_head_;
-    Message *msg_tail_;
-    size_t count_;
-    size_t limit_;
-    bool term_;
-
-  public:
-    MsgQueue();
-    ~MsgQueue();
-    bool push(Message *msg);
-    Message *pop();
-    void term();
-    bool is_term();
-    
-    void set_limit(size_t limit);
-    // count_ may be critical section, however the function is read only
-    // and integer can be read atomically in x86 arch.
-    size_t count() const { return this->count_; };    
-  };
-
   class Emitter {
   private:
     pthread_t th_;
@@ -67,7 +42,7 @@ namespace fluent {
     virtual void worker() = 0;
     
   protected:
-    MsgQueue queue_;
+    MsgThreadQueue queue_;
     void set_errmsg(const std::string &errmsg) {
       this->errmsg_ = errmsg;
     }
@@ -78,7 +53,7 @@ namespace fluent {
     Emitter();
     virtual ~Emitter();
     void set_queue_limit(size_t limit);
-    bool emit(Message *msg);
+    virtual bool emit(Message *msg);
     const std::string& errmsg() const { return this->errmsg_; }
   };
 
@@ -104,6 +79,16 @@ namespace fluent {
     FileEmitter(const std::string &fname);
     ~FileEmitter();
     void worker();
+  };
+
+  class QueueEmitter : public Emitter {
+  private:
+    MsgQueue *q_;
+  public:
+    QueueEmitter(MsgQueue *q);
+    ~QueueEmitter();
+    void worker();
+    bool emit(Message *msg);    
   };
   
 }

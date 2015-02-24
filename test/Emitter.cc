@@ -126,3 +126,20 @@ TEST(FileEmitter, basic) {
   EXPECT_TRUE(0 == memcmp(sbuf.data(), buf, sbuf.size()));
   EXPECT_TRUE(0 == unlink(fname.c_str()));  
 }
+
+
+TEST(QueueEmitter, basic) {
+  const std::string tag = "test.queue";
+  fluent::MsgQueue *q = new fluent::MsgQueue();
+  fluent::QueueEmitter *qe = new fluent::QueueEmitter(q);
+  fluent::Message *msg = new fluent::Message(tag);
+  msg->set("a", 1);
+  EXPECT_EQ(nullptr, q->pop());
+  EXPECT_TRUE(qe->emit(msg));
+  fluent::Message *pmsg = q->pop();
+  EXPECT_NE(nullptr, pmsg);
+
+  const fluent::Message::Fixnum &fn =
+    pmsg->get("a").as<fluent::Message::Fixnum>();
+  EXPECT_EQ(1, fn.val());
+}

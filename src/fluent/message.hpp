@@ -35,6 +35,7 @@
 namespace fluent {
   class Message {
   public:
+    class Object;
     class Array;
     class Map;
     class String;
@@ -59,6 +60,9 @@ namespace fluent {
     bool del(const std::string &key);
     Map *retain_map(const std::string &key);
     Array *retain_array(const std::string &key);
+    const Object& get(const std::string &key) const {
+      return this->root_.get(key);
+    }
 
     // Convert to msgpack data format.
     void to_msgpack(msgpack::packer<msgpack::sbuffer> *pk) const;

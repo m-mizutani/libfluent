@@ -24,12 +24,52 @@
  * POSSIBILITY OF SUCH DAMAGE.
  */
 
-#ifndef __FLUENT_HPP__
-#define __FLUENT_HPP__
+#ifndef __FLUENT_QUEUE_HPP__
+#define __FLUENT_QUEUE_HPP__
 
-#include "./fluent/logger.hpp"
-#include "./fluent/message.hpp"
-#include "./fluent/queue.hpp"
-#include "./fluent/exception.hpp"
+#include <string>
+#include <pthread.h>
+#include "./message.hpp"
 
-#endif
+namespace fluent {
+  class MsgQueue {
+  private:
+    static const bool DBG;
+    Message *msg_head_;
+    Message *msg_tail_;
+    size_t count_;
+    size_t limit_;
+
+  public:
+    MsgQueue();
+    virtual ~MsgQueue();
+    virtual bool push(Message *msg);
+    virtual Message *pop();    
+    virtual void set_limit(size_t limit);
+    // count_ may be critical section, however the function is read only
+    // and integer can be read atomically in x86 arch.
+    size_t count() const { return this->count_; }; 
+    size_t limit() const { return this->limit_; };
+  };
+
+  class MsgThreadQueue : public MsgQueue {
+  private:
+    static const bool DBG;
+    pthread_mutex_t mutex_;
+    pthread_cond_t cond_;
+    bool term_;
+    
+  public:
+    MsgThreadQueue();
+    ~MsgThreadQueue();
+    bool push(Message *msg);
+    Message *pop();
+    void set_limit(size_t limit);
+    
+    void term();
+    bool is_term();    
+  };
+}
+
+
+#endif   // __SRC_FLUENT_QUEUE_H__
