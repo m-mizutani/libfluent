@@ -26,6 +26,7 @@ TARGET_LINK_LIBRARIES(fluent msgpack pthread)
 ADD_EXECUTABLE(fluent-test ${TESTSRCS})
 TARGET_LINK_LIBRARIES(fluent-test fluent)
 
+INSTALL(TARGETS fluent LIBRARY DESTINATION lib)
 INSTALL(FILES src/fluent.hpp DESTINATION include/)
 INSTALL(FILES ${HEADERS} DESTINATION include/fluent)
 
