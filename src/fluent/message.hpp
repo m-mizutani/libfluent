@@ -61,7 +61,7 @@ namespace fluent {
     Map *retain_map(const std::string &key);
     Array *retain_array(const std::string &key);
     const Object& get(const std::string &key) const {
-      return this->root_.get(key);
+      return this->root_->get(key);
     }
 
     // Convert to msgpack data format.
@@ -69,15 +69,17 @@ namespace fluent {
 
     // Linked list connect/disconnect.
     void attach(Message *next);
-    Message *detach();
-    Message *next() const { return this->next_; };
-    
+    Message* detach();
+    Message* next() const { return this->next_; };
+    Message* clone(Message *base=nullptr) const;
+
     class Object {
     public:
       Object() {}
       virtual ~Object() {}
       virtual void to_msgpack(msgpack::packer<msgpack::sbuffer> *pk) 
         const = 0;
+      virtual Object* clone() const = 0;
       virtual bool has_value() const { return true; }
       template <typename T> const T& as() const {
         const T* ptr = dynamic_cast<const T*>(this);
@@ -110,12 +112,14 @@ namespace fluent {
       bool set(const std::string &key, int val);
       bool set(const std::string &key, double val);
       bool set(const std::string &key, bool val);
+      bool set(const std::string &key, Object *obj);
       bool del(const std::string &key);
       bool has_key(const std::string &key) const {
         return (this->map_.find(key) != this->map_.end());
       }
       const Object& get(const std::string &key) const;
       void to_msgpack(msgpack::packer<msgpack::sbuffer> *pk) const;
+      Object* clone() const;
     };
 
     class Array : public Object {
@@ -130,9 +134,11 @@ namespace fluent {
       void push(int val);
       void push(double val);
       void push(bool val);
+      void push(Object *obj);
       size_t size() const { return this->array_.size(); }
       const Object& get(size_t idx) const;
       void to_msgpack(msgpack::packer<msgpack::sbuffer> *pk) const;
+      Object* clone() const;
     };
 
     class String : public Object {
@@ -142,6 +148,7 @@ namespace fluent {
       String(const std::string &val);
       String(const char *val);
       void to_msgpack(msgpack::packer<msgpack::sbuffer> *pk) const;
+      Object* clone() const { return new String(this->val_); }
       const std::string &val() const { return this->val_; }
     };
 
@@ -151,6 +158,7 @@ namespace fluent {
     public:
       Fixnum(int val);
       void to_msgpack(msgpack::packer<msgpack::sbuffer> *pk) const;
+      Object* clone() const { return new Fixnum(this->val_); }
       int val() const { return this->val_; }
     };
 
@@ -160,6 +168,7 @@ namespace fluent {
     public:
       Float(double val);
       void to_msgpack(msgpack::packer<msgpack::sbuffer> *pk) const;
+      Object* clone() const { return new Float(this->val_); }
       double val() const { return this->val_; }
     };
 
@@ -169,13 +178,14 @@ namespace fluent {
     public:
       Bool(bool val);
       void to_msgpack(msgpack::packer<msgpack::sbuffer> *pk) const;
+      Object* clone() const { return new Bool(this->val_); }
       bool val() const { return this->val_; }
     };
 
   private:    
     time_t ts_;
     std::string tag_;
-    Map root_;
+    Map *root_;
     Message *next_;    
   };
 }

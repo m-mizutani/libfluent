@@ -1,0 +1,14 @@
+2015-02-27: Version 1.0.3
+	Bug fix
+	* Fixed memory management of Message when having multiple destination
+
+2015-02-25: Version 1.0.2
+	Bug fix
+	* Fixed a library installation issue
+
+2015-02-24: Version 1.0.1
+	New features
+	* Added message queue as a new destination to handle message by program
+
+2015-02-18: Version 1.0.0
+	Initial launch.

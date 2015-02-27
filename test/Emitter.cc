@@ -135,11 +135,18 @@ TEST(QueueEmitter, basic) {
   fluent::Message *msg = new fluent::Message(tag);
   msg->set("a", 1);
   EXPECT_EQ(nullptr, q->pop());
+
+  // Emit (store the message)
   EXPECT_TRUE(qe->emit(msg));
+
+  // Fetch the stored message.
   fluent::Message *pmsg = q->pop();
   EXPECT_NE(nullptr, pmsg);
 
   const fluent::Message::Fixnum &fn =
     pmsg->get("a").as<fluent::Message::Fixnum>();
   EXPECT_EQ(1, fn.val());
+
+  // No messages.
+  EXPECT_EQ(nullptr, q->pop());
 }

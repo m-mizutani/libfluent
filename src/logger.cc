@@ -73,10 +73,18 @@ namespace fluent {
     }
 
     this->msg_set_.erase(msg);
+
     bool rc = true;
-    for (size_t i = 0; i < this->emitter_.size(); i++) {
-      rc &= this->emitter_[i]->emit(msg);
+    if (this->emitter_.size() == 1) {
+      rc = this->emitter_[0]->emit(msg);
+    } else if (this->emitter_.size() > 1) {
+      for (size_t i = 0; i < this->emitter_.size() - 1; i++) {
+        Message *cloned_msg = msg->clone();
+        rc &= this->emitter_[i]->emit(cloned_msg);
+      }
+      rc &= this->emitter_[this->emitter_.size() - 1]->emit(msg);
     }
+    
     return rc;
   }
 

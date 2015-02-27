@@ -193,7 +193,7 @@ TEST_F(MessageTest, NotOverwriteMap) {
   EXPECT_TRUE(0 == memcmp(sbuf_.data(), expect.data(), sbuf_.size()));
 }
 
-TEST(Message, link) {
+TEST(Message, linkedMessage) {
   // TODO: add tests
 }
 
@@ -259,4 +259,72 @@ TEST(Message, MapGetObject) {
   EXPECT_EQ(a.get(0).as<fluent::Message::String>().val(), "druid");
 
   EXPECT_THROW(a.get(1), fluent::Exception::IndexError);
+}
+
+TEST(Message, clone) {
+  fluent::Message *msg1 = new fluent::Message("race.gnome");
+  msg1->set("i", 1);
+  msg1->set("s", "warlock");
+  msg1->set("f", 3.141592);
+  msg1->set("b", true);
+  fluent::Message::Map *map = msg1->retain_map("m");
+  map->set("hunter", 1);
+  fluent::Message::Array *arr = msg1->retain_array("a");
+  arr->push("druid");
+
+  fluent::Message *msg2 = msg1->clone();
+  // other pointer
+  EXPECT_NE(msg1, msg2);
+  EXPECT_EQ(msg1->tag(), msg2->tag());
+  EXPECT_EQ(msg1->ts(),  msg2->ts());
+
+  // Get objects.
+  const fluent::Message::Object &obj_i = msg2->get("i");
+  const fluent::Message::Object &obj_s = msg2->get("s");
+  const fluent::Message::Object &obj_f = msg2->get("f");
+  const fluent::Message::Object &obj_b = msg2->get("b");
+  const fluent::Message::Object &obj_m = msg2->get("m");
+  const fluent::Message::Object &obj_a = msg2->get("a");
+  EXPECT_THROW(msg2->get("x"), fluent::Exception::KeyError);  
+
+  // Check types.
+  EXPECT_TRUE(obj_i.is<fluent::Message::Fixnum>());
+  EXPECT_TRUE(obj_s.is<fluent::Message::String>());
+  EXPECT_TRUE(obj_f.is<fluent::Message::Float>());
+  EXPECT_TRUE(obj_b.is<fluent::Message::Bool>());
+  EXPECT_TRUE(obj_m.is<fluent::Message::Map>());
+  EXPECT_TRUE(obj_a.is<fluent::Message::Array>());
+  
+  // Convert to appropriate type.
+  const fluent::Message::Fixnum &i = obj_i.as<fluent::Message::Fixnum>();
+  const fluent::Message::String &s = obj_s.as<fluent::Message::String>();
+  const fluent::Message::Float &f = obj_f.as<fluent::Message::Float>();
+  const fluent::Message::Bool &b = obj_b.as<fluent::Message::Bool>();
+  const fluent::Message::Map &m = obj_m.as<fluent::Message::Map>();
+  const fluent::Message::Array &a = obj_a.as<fluent::Message::Array>();
+  EXPECT_THROW(obj_i.as<fluent::Message::String>(),
+               fluent::Exception::TypeError);
+  EXPECT_THROW(obj_i.as<fluent::Message::Float>(),
+               fluent::Exception::TypeError);
+
+  // Check values.
+  EXPECT_EQ(i.val(), 1);
+  EXPECT_EQ(s.val(), "warlock");
+  EXPECT_EQ(f.val(), 3.141592);
+  EXPECT_EQ(b.val(), true);
+  
+  EXPECT_TRUE(m.has_key("hunter"));
+  EXPECT_FALSE(m.has_key("x"));
+  EXPECT_EQ(m.get("hunter").as<fluent::Message::Fixnum>().val(), 1);
+  EXPECT_EQ(a.size(), 1);
+  EXPECT_EQ(a.get(0).as<fluent::Message::String>().val(), "druid");
+
+  EXPECT_THROW(a.get(1), fluent::Exception::IndexError);
+
+  // Check independece among the original message and copied one.
+  msg1->set("new", "priest");
+  EXPECT_EQ("priest", msg1->get("new").as<fluent::Message::String>().val());
+  EXPECT_THROW(msg2->get("new"), fluent::Exception::KeyError);
+  delete msg1;
+  delete msg2;
 }

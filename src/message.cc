@@ -30,10 +30,12 @@
 #include "./debug.h"
 
 namespace fluent {
-  Message::Message(const std::string &tag) : tag_(tag), next_(nullptr) {
+  Message::Message(const std::string &tag) :
+    tag_(tag), root_(new Map()), next_(nullptr) {
     this->ts_ = time(nullptr);
   };
   Message::~Message() {
+    delete this->root_;
     delete this->next_;
   }
 
@@ -42,28 +44,28 @@ namespace fluent {
   }
   
   bool Message::set(const std::string &key, const std::string &val) {
-    return this->root_.set(key, val);
+    return this->root_->set(key, val);
   }
   bool Message::set(const std::string &key, const char *val){
-    return this->root_.set(key, val);
+    return this->root_->set(key, val);
   }
   bool Message::set(const std::string &key, int val){
-    return this->root_.set(key, val);
+    return this->root_->set(key, val);
   }
   bool Message::set(const std::string &key, double val){
-    return this->root_.set(key, val);
+    return this->root_->set(key, val);
   }
   bool Message::set(const std::string &key, bool val){
-    return this->root_.set(key, val);
+    return this->root_->set(key, val);
   }
   bool Message::del(const std::string &key){
-    return this->root_.del(key);
+    return this->root_->del(key);
   }
   Message::Map* Message::retain_map(const std::string &key) {
-    return this->root_.retain_map(key);
+    return this->root_->retain_map(key);
   }
   Message::Array* Message::retain_array(const std::string &key) { 
-    return this->root_.retain_array(key);
+    return this->root_->retain_array(key);
   }
 
   
@@ -71,7 +73,7 @@ namespace fluent {
     pk->pack_array(3);          // [?, ?, ?]
     pk->pack(this->tag_);       // [tag, ?, ?]
     pk->pack(this->ts_);        // [tag, timestamp, ?]
-    this->root_.to_msgpack(pk);
+    this->root_->to_msgpack(pk);
     return ;
   }
 
@@ -88,6 +90,20 @@ namespace fluent {
     return m;
   }
 
+  Message* Message::clone(Message *base) const {
+    Message *msg = new Message(this->tag_);
+    if (this->next_) {
+      this->next_->clone(msg);
+    }
+    if (base) {
+      base->attach(msg);
+    }
+    msg->set_ts(this->ts_);
+
+    delete msg->root_;
+    msg->root_ = dynamic_cast<Map*>(this->root_->clone());
+    return msg;
+  }
 
 
   
@@ -186,6 +202,18 @@ namespace fluent {
       return false;
     }
   }
+  bool Message::Map::set(const std::string &key, Object *obj) {
+    if (this->map_.find(key) == this->map_.end()) {
+      // Create and insert value
+      debug(DBG, "create Object for %s\n", key.c_str());
+      this->map_.insert(std::make_pair(key, obj));
+      return true;
+    } else {
+      // Already exists
+      return false;
+    }
+  }
+  
   bool Message::Map::del(const std::string &key) {
     auto it = this->map_.find(key);
     if (it != this->map_.end()) {
@@ -219,6 +247,13 @@ namespace fluent {
     }
   }
 
+  Message::Object* Message::Map::clone() const {
+    Map *map = new Map();
+    for(auto it = this->map_.begin(); it != this->map_.end(); it++) {
+      map->set(it->first, (it->second)->clone());
+    }
+    return map;
+  }
 
   void Message::Array::push(const std::string &val) {
     Object *v = new String(val);
@@ -240,6 +275,9 @@ namespace fluent {
     Object *v = new Bool(val);
     this->array_.push_back(v);
   }
+  void Message::Array::push(Object *obj) {
+    this->array_.push_back(obj);
+  }
 
   void Message::Array::to_msgpack(msgpack::packer<msgpack::sbuffer> *pk) const {
     pk->pack_array(this->array_.size());
@@ -248,6 +286,14 @@ namespace fluent {
     }
   }
 
+  Message::Object* Message::Array::clone() const {
+    Array *array = new Array();
+    for(size_t i = 0; i < this->array_.size(); i++) {
+      array->push(this->array_[i]->clone());
+    }
+    return array;
+  }    
+  
   Message::Map* Message::Array::retain_map() {
     Map *map = new Map();
     this->array_.push_back(map);
