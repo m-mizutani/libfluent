@@ -35,19 +35,21 @@ namespace fluent {
   class Message;
   class Socket;
   class Emitter;
-
+  class MsgQueue;
+  
   class Logger {
   private:
     std::set<Message*> msg_set_;
     std::vector<Emitter*> emitter_;
     std::string errmsg_;
-    
+    std::vector<MsgQueue*> queue_;
   public:
     Logger();
     ~Logger();
 
     void new_forward(const std::string &host, int port=24224);
     void new_dumpfile(const std::string &fname);
+    MsgQueue* new_msgqueue();
     Message* retain_message(const std::string &tag);
     bool emit(Message *msg);
     const std::string& errmsg() const { return this->errmsg_; }

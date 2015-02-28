@@ -1,3 +1,7 @@
+2015-02-28: Version 1.0.4
+	New features
+	* Added interface of message queue
+
 2015-02-27: Version 1.0.3
 	Bug fix
 	* Fixed memory management of Message when having multiple destination
