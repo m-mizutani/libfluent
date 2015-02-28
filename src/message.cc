@@ -76,7 +76,12 @@ namespace fluent {
     this->root_->to_msgpack(pk);
     return ;
   }
-
+  void Message::to_ostream(std::ostream &os) const {
+    os << "[" << this->tag_ << ", " << this->ts_ << ", ";
+    this->root_->to_ostream(os);
+    os << "]";
+  }
+  
   void Message::attach(Message *next) {
     assert(this->next_ == nullptr);
     this->next_ = next;
@@ -247,6 +252,21 @@ namespace fluent {
     }
   }
 
+  void Message::Map::to_ostream(std::ostream &os) const {
+    os << "{";
+    if (this->map_.size() > 0) {
+      const std::string &fkey = this->map_.begin()->first; // first key
+      std::for_each(this->map_.begin(), this->map_.end(),
+                    [&](std::pair <std::string, Object*> e) {
+                      os << ((fkey != e.first) ? ", " : "")
+                         << "\"" << e.first << "\": ";
+                      (e.second)->to_ostream(os);
+                    });
+    }
+    os << "}";
+  }
+  
+
   Message::Object* Message::Map::clone() const {
     Map *map = new Map();
     for(auto it = this->map_.begin(); it != this->map_.end(); it++) {
@@ -285,6 +305,20 @@ namespace fluent {
       this->array_[i]->to_msgpack(pk);
     }
   }
+
+  void Message::Array::to_ostream(std::ostream &os) const {
+    os << "[";
+    if (this->array_.size() > 0) {
+      Object *fobj = this->array_[0];
+      std::for_each(this->array_.begin(), this->array_.end(),
+                    [&](Object *obj) {
+                      os << ((fobj != obj) ? ", " : "");
+                      obj->to_ostream(os);
+                    });
+    }
+    os << "]";
+  }
+  
 
   Message::Object* Message::Array::clone() const {
     Array *array = new Array();

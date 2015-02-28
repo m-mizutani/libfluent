@@ -28,6 +28,7 @@
 #define __FLUENT_MESSAGE_HPP__
 
 #include <msgpack.hpp>
+#include <iostream>
 #include <map>
 #include <assert.h>
 #include "./exception.hpp"
@@ -66,7 +67,12 @@ namespace fluent {
 
     // Convert to msgpack data format.
     void to_msgpack(msgpack::packer<msgpack::sbuffer> *pk) const;
-
+    void to_ostream(std::ostream &os) const;
+    friend std::ostream& operator<<(std::ostream& os, const Message& msg) {
+      msg.to_ostream(os);
+      return os;
+    }
+      
     // Linked list connect/disconnect.
     void attach(Message *next);
     Message* detach();
@@ -79,6 +85,8 @@ namespace fluent {
       virtual ~Object() {}
       virtual void to_msgpack(msgpack::packer<msgpack::sbuffer> *pk) 
         const = 0;
+      virtual void to_ostream(std::ostream &os) const = 0;
+      
       virtual Object* clone() const = 0;
       virtual bool has_value() const { return true; }
       template <typename T> const T& as() const {
@@ -119,6 +127,7 @@ namespace fluent {
       }
       const Object& get(const std::string &key) const;
       void to_msgpack(msgpack::packer<msgpack::sbuffer> *pk) const;
+      void to_ostream(std::ostream &os) const;      
       Object* clone() const;
     };
 
@@ -138,6 +147,7 @@ namespace fluent {
       size_t size() const { return this->array_.size(); }
       const Object& get(size_t idx) const;
       void to_msgpack(msgpack::packer<msgpack::sbuffer> *pk) const;
+      void to_ostream(std::ostream &os) const;      
       Object* clone() const;
     };
 
@@ -148,6 +158,9 @@ namespace fluent {
       String(const std::string &val);
       String(const char *val);
       void to_msgpack(msgpack::packer<msgpack::sbuffer> *pk) const;
+      void to_ostream(std::ostream &os) const {
+        os << '"' << this->val_ << '"';
+      }
       Object* clone() const { return new String(this->val_); }
       const std::string &val() const { return this->val_; }
     };
@@ -158,6 +171,7 @@ namespace fluent {
     public:
       Fixnum(int val);
       void to_msgpack(msgpack::packer<msgpack::sbuffer> *pk) const;
+      void to_ostream(std::ostream &os) const { os << this->val_; }
       Object* clone() const { return new Fixnum(this->val_); }
       int val() const { return this->val_; }
     };
@@ -168,6 +182,7 @@ namespace fluent {
     public:
       Float(double val);
       void to_msgpack(msgpack::packer<msgpack::sbuffer> *pk) const;
+      void to_ostream(std::ostream &os) const { os << this->val_; }
       Object* clone() const { return new Float(this->val_); }
       double val() const { return this->val_; }
     };
@@ -178,6 +193,7 @@ namespace fluent {
     public:
       Bool(bool val);
       void to_msgpack(msgpack::packer<msgpack::sbuffer> *pk) const;
+      void to_ostream(std::ostream &os) const { os << this->val_; }
       Object* clone() const { return new Bool(this->val_); }
       bool val() const { return this->val_; }
     };
