@@ -46,6 +46,8 @@ namespace fluent {
     for (size_t i = 0; i < this->emitter_.size(); i++) {
       delete this->emitter_[i];
     }
+    std::for_each(this->queue_.begin(), this->queue_.end(),
+                  [](MsgQueue* const &x) { delete x; });
   }
 
   void Logger::new_forward(const std::string &host, int port) {
@@ -55,6 +57,13 @@ namespace fluent {
   void Logger::new_dumpfile(const std::string &fname) {
     Emitter *e = new FileEmitter(fname);
     this->emitter_.push_back(e);
+  }
+  MsgQueue* Logger::new_msgqueue() {
+    MsgQueue *q = new MsgQueue();
+    this->queue_.push_back(q);
+    Emitter *e = new QueueEmitter(q);
+    this->emitter_.push_back(e);
+    return q;
   }
   
   

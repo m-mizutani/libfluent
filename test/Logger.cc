@@ -89,3 +89,21 @@ TEST_F(FluentTest, QueueLimit) {
   delete logger;
 }
 
+TEST(Logger, QueueEmitter) {
+  fluent::Logger *logger = new fluent::Logger();
+  fluent::MsgQueue *q = logger->new_msgqueue();
+  fluent::Message *msg = logger->retain_message("test.log");
+  msg->set("race", "gnome");
+  EXPECT_TRUE(logger->emit(msg));
+
+  // Queue has the emitted message.
+  msg = q->pop();
+  EXPECT_TRUE(msg != nullptr);
+  EXPECT_EQ(msg->get("race").as<fluent::Message::String>().val(), "gnome");
+
+  // Queue has no more message.
+  msg = q->pop();
+  EXPECT_TRUE(msg == nullptr);
+  
+  delete logger;
+}
