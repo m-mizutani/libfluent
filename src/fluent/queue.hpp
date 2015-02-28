@@ -44,7 +44,8 @@ namespace fluent {
     MsgQueue();
     virtual ~MsgQueue();
     virtual bool push(Message *msg);
-    virtual Message *pop();    
+    virtual Message *pop();
+    virtual Message *bulk_pop();    
     virtual void set_limit(size_t limit);
     // count_ may be critical section, however the function is read only
     // and integer can be read atomically in x86 arch.
@@ -63,7 +64,7 @@ namespace fluent {
     MsgThreadQueue();
     ~MsgThreadQueue();
     bool push(Message *msg);
-    Message *pop();
+    Message *bulk_pop();
     void set_limit(size_t limit);
     
     void term();

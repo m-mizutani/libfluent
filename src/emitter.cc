@@ -130,7 +130,7 @@ namespace fluent {
     Message *root;
     bool abort_loop = false;
     
-    while (nullptr != (root = this->queue_.pop())) {
+    while (nullptr != (root = this->queue_.bulk_pop())) {
       for(Message *msg = root; msg; msg = msg->next()) {
         msgpack::sbuffer buf;
         msgpack::packer <msgpack::sbuffer> pk(&buf);
@@ -180,7 +180,7 @@ namespace fluent {
     assert(this->enabled_);
     
     Message *root;
-    while (nullptr != (root = this->queue_.pop())) {
+    while (nullptr != (root = this->queue_.bulk_pop())) {
       for(Message *msg = root; msg; msg = msg->next()) {
         msgpack::sbuffer buf;
         msgpack::packer <msgpack::sbuffer> pk(&buf);
