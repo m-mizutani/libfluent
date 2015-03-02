@@ -1,3 +1,7 @@
+2015-03-02: Version 1.0.5
+	Bug fix
+	* Fixed message queue to pop message one by one
+
 2015-02-28: Version 1.0.4
 	New features
 	* Added interface of message queue
