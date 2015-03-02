@@ -55,6 +55,7 @@ namespace fluent {
     bool set(const std::string &key, const std::string &val);
     bool set(const std::string &key, const char *val);
     bool set(const std::string &key, int val);
+    bool set(const std::string &key, unsigned int val);
     bool set(const std::string &key, double val);
     bool set(const std::string &key, bool val);
     bool del(const std::string &key);
@@ -110,6 +111,7 @@ namespace fluent {
       bool set(const std::string &key, const std::string &val);
       bool set(const std::string &key, const char *val);
       bool set(const std::string &key, int val);
+      bool set(const std::string &key, unsigned int val);
       bool set(const std::string &key, double val);
       bool set(const std::string &key, bool val);
       bool set(const std::string &key, Object *obj);
@@ -132,6 +134,7 @@ namespace fluent {
       void push(const std::string &val);
       void push(const char *val);
       void push(int val);
+      void push(unsigned int val);
       void push(double val);
       void push(bool val);
       void push(Object *obj);
@@ -155,13 +158,27 @@ namespace fluent {
     class Fixnum : public Object {
     private:
       int val_;
+      
     public:
       Fixnum(int val);
+      Fixnum(unsigned int val);
       void to_msgpack(msgpack::packer<msgpack::sbuffer> *pk) const;
       Object* clone() const { return new Fixnum(this->val_); }
       int val() const { return this->val_; }
     };
 
+    // Unsigned fixed num
+    class Ufixnum : public Object {
+    private:
+      unsigned int val_;
+      
+    public:
+      Ufixnum(unsigned int val);
+      void to_msgpack(msgpack::packer<msgpack::sbuffer> *pk) const;
+      Object* clone() const { return new Ufixnum(this->val_); }
+      unsigned int val() const { return this->val_; }
+    };
+    
     class Float : public Object {
     private:
       double val_;
