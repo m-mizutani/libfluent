@@ -58,6 +58,10 @@ namespace fluent {
     Emitter *e = new FileEmitter(fname);
     this->emitter_.push_back(e);
   }
+  void Logger::new_dumpfile(int fd) {
+    Emitter *e = new FileEmitter(fd);
+    this->emitter_.push_back(e);
+  }
   MsgQueue* Logger::new_msgqueue() {
     MsgQueue *q = new MsgQueue();
     this->queue_.push_back(q);

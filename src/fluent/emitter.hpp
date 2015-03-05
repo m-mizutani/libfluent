@@ -75,8 +75,10 @@ namespace fluent {
   private:
     int fd_;
     bool enabled_;
+    bool opened_;
   public:
     FileEmitter(const std::string &fname);
+    FileEmitter(int fd);
     ~FileEmitter();
     void worker();
   };
