@@ -1,3 +1,8 @@
+2015-03-07: Version 1.0.5
+	New features
+	* Added Logger::new_dumpfile(int) to use existing file descriptor
+	* Added unsigned int interface for Message
+
 2015-02-28: Version 1.0.4
 	New features
 	* Added interface of message queue
