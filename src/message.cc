@@ -52,6 +52,9 @@ namespace fluent {
   bool Message::set(const std::string &key, int val){
     return this->root_->set(key, val);
   }
+  bool Message::set(const std::string &key, unsigned int val){
+    return this->root_->set(key, val);
+  }
   bool Message::set(const std::string &key, double val){
     return this->root_->set(key, val);
   }
@@ -155,6 +158,18 @@ namespace fluent {
       return false;
     }
   }
+  bool Message::Map::set(const std::string &key, unsigned int val) {
+    if (this->map_.find(key) == this->map_.end()) {
+      // Create and insert value
+      Object *n = new Ufixnum(val);
+      this->map_.insert(std::make_pair(key, n));
+      return true;
+    } else {
+      // Already exists
+      return false;
+    }
+  }
+  
   bool Message::Map::set(const std::string &key, const char *val) {
     if (this->map_.find(key) == this->map_.end()) {
       // Create and insert value
@@ -287,6 +302,10 @@ namespace fluent {
     Object *v = new Fixnum(val);
     this->array_.push_back(v);
   }
+  void Message::Array::push(unsigned int val) {
+    Object *v = new Ufixnum(val);
+    this->array_.push_back(v);
+  }
   void Message::Array::push(double val) {
     Object *v = new Float(val);
     this->array_.push_back(v);
@@ -354,6 +373,12 @@ namespace fluent {
     pk->pack(this->val_);
   }  
 
+  Message::Ufixnum::Ufixnum(unsigned int val) : val_(val) {}
+  void Message::Ufixnum::to_msgpack(msgpack::packer<msgpack::sbuffer> *pk) 
+    const {
+    pk->pack(this->val_);
+  }  
+  
   Message::String::String(const std::string &val) : val_(val) {}
   Message::String::String(const char *val) : val_(val) {}
   void Message::String::to_msgpack(msgpack::packer<msgpack::sbuffer> *pk) 

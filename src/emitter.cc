@@ -158,20 +158,31 @@ namespace fluent {
   // ----------------------------------------------------------------
   // FileEmitter
   FileEmitter::FileEmitter(const std::string &fname) :
-    Emitter(), enabled_(false) {
+    Emitter(), enabled_(false), opened_(false) {
     // Setup socket.
 
     this->fd_ = ::open(fname.c_str(), O_WRONLY | O_CREAT | O_APPEND, 0644);
     if (this->fd_ < 0) {
       this->set_errmsg(strerror(errno));
     } else {
+      this->opened_ = true;
       this->enabled_ = true;
       this->start_worker();
     }
   }
+  FileEmitter::FileEmitter(int fd) : Emitter(), fd_(fd),
+                                     enabled_(false), opened_(false) {
+    if (fcntl(fd, F_GETFL) < 0 && errno == EBADF) {
+      this->set_errmsg("Invalid file descriptor");
+    } else {
+      this->enabled_ = true;
+      this->start_worker();
+    }
+  }
+    
   FileEmitter::~FileEmitter() {
     this->stop_worker();
-    if (this->enabled_) {
+    if (this->enabled_ && this->opened_) {
       ::close(this->fd_);
     }
   }

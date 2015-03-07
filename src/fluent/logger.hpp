@@ -49,6 +49,7 @@ namespace fluent {
 
     void new_forward(const std::string &host, int port=24224);
     void new_dumpfile(const std::string &fname);
+    void new_dumpfile(int fd);
     MsgQueue* new_msgqueue();
     Message* retain_message(const std::string &tag);
     bool emit(Message *msg);
