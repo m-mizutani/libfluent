@@ -132,20 +132,37 @@ TEST(QueueEmitter, basic) {
   const std::string tag = "test.queue";
   fluent::MsgQueue *q = new fluent::MsgQueue();
   fluent::QueueEmitter *qe = new fluent::QueueEmitter(q);
-  fluent::Message *msg = new fluent::Message(tag);
-  msg->set("a", 1);
+
+  fluent::Message *msg1 = new fluent::Message(tag);
+  msg1->set("seq", 1);
   EXPECT_EQ(nullptr, q->pop());
-
   // Emit (store the message)
-  EXPECT_TRUE(qe->emit(msg));
+  EXPECT_TRUE(qe->emit(msg1));
 
+  fluent::Message *msg2 = new fluent::Message(tag);
+  msg2->set("seq", 2);
+  // Emit (store the message)
+  EXPECT_TRUE(qe->emit(msg2));
+
+  
   // Fetch the stored message.
-  fluent::Message *pmsg = q->pop();
-  EXPECT_NE(nullptr, pmsg);
+  fluent::Message *pmsg;
 
-  const fluent::Message::Fixnum &fn =
-    pmsg->get("a").as<fluent::Message::Fixnum>();
-  EXPECT_EQ(1, fn.val());
+  // First message
+  pmsg = q->pop();
+  ASSERT_NE(nullptr, pmsg);
+  const fluent::Message::Fixnum &fn1 =
+    pmsg->get("seq").as<fluent::Message::Fixnum>();
+  EXPECT_EQ(1, fn1.val());
+  delete pmsg;
+
+  // Second message
+  pmsg = q->pop();
+  ASSERT_NE(nullptr, pmsg);
+  const fluent::Message::Fixnum &fn2 =
+    pmsg->get("seq").as<fluent::Message::Fixnum>();
+  EXPECT_EQ(2, fn2.val());
+  delete pmsg;
 
   // No messages.
   EXPECT_EQ(nullptr, q->pop());

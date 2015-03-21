@@ -78,12 +78,30 @@ namespace fluent {
 
     assert(this->count_ > 0);
     msg = this->msg_head_;
+    this->msg_head_ = msg->detach();
+    if (this->msg_head_ == nullptr) {
+      this->msg_tail_ = nullptr;
+    }
+    this->count_--;
+    
+    return msg;
+  }
+
+  Message* MsgQueue::bulk_pop() {
+    Message *msg;
+    
+    if (this->msg_head_ == nullptr) {
+      return nullptr;
+    }
+
+    assert(this->count_ > 0);
+    msg = this->msg_head_;
     this->msg_head_ = this->msg_tail_ = nullptr;
     this->count_ = 0;
     
     return msg;
   }
-  
+
   void MsgQueue::set_limit(size_t limit) {
     this->limit_ = limit;
   }
@@ -119,14 +137,14 @@ namespace fluent {
     
     return rc;
   }
-  Message* MsgThreadQueue::pop() {
+  Message* MsgThreadQueue::bulk_pop() {
     Message *msg;
     
     debug(DBG, "entering lock");
     ::pthread_mutex_lock(&(this->mutex_));
     debug(DBG, "entered lock");
 
-    msg = this->MsgQueue::pop();
+    msg = this->MsgQueue::bulk_pop();
     if (msg != nullptr) {
       debug(DBG, "poped before wait (%p)", msg);
       ::pthread_mutex_unlock(&(this->mutex_));
@@ -144,7 +162,7 @@ namespace fluent {
     ::pthread_cond_wait(&(this->cond_), &(this->mutex_));
     debug(DBG, "left wait");
 
-    msg = this->MsgQueue::pop();
+    msg = this->MsgQueue::bulk_pop();
     ::pthread_mutex_unlock(&(this->mutex_));
     if (msg) {
       debug(DBG, "poped (%p)", msg);
