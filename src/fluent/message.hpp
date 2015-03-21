@@ -59,6 +59,7 @@ namespace fluent {
     bool set(const std::string &key, unsigned int val);
     bool set(const std::string &key, double val);
     bool set(const std::string &key, bool val);
+    bool set_nil(const std::string &key);
     bool del(const std::string &key);
     Map *retain_map(const std::string &key);
     Array *retain_array(const std::string &key);
@@ -80,6 +81,9 @@ namespace fluent {
     Message* next() const { return this->next_; };
     Message* clone(Message *base=nullptr) const;
 
+    // -----------------------------------------------------------------
+    // Object class
+    // Parent class for any object such as map, array, string, etc.
     class Object {
     public:
       Object() {}
@@ -90,6 +94,7 @@ namespace fluent {
       
       virtual Object* clone() const = 0;
       virtual bool has_value() const { return true; }
+      virtual bool is_nil() const { return false; }
       template <typename T> const T& as() const {
         const T* ptr = dynamic_cast<const T*>(this);
         if (ptr) {
@@ -103,10 +108,12 @@ namespace fluent {
       template <typename T> bool is() const {
         const T* ptr = dynamic_cast<const T*>(this);
         return (ptr != nullptr);
-      }
-      
+      }      
     };
 
+    // -----------------------------------------------------------------
+    // Map class
+    // Key value type data map, a.k.a. Hash map
     class Map : public Object {
     private:
       std::map<std::string, Object*> map_;
@@ -123,6 +130,7 @@ namespace fluent {
       bool set(const std::string &key, double val);
       bool set(const std::string &key, bool val);
       bool set(const std::string &key, Object *obj);
+      bool set_nil(const std::string &key);
       bool del(const std::string &key);
       bool has_key(const std::string &key) const {
         return (this->map_.find(key) != this->map_.end());
@@ -133,6 +141,9 @@ namespace fluent {
       Object* clone() const;
     };
 
+    // -----------------------------------------------------------------
+    // Array class
+    // 
     class Array : public Object {
       std::vector<Object*> array_;
     public:
@@ -147,6 +158,7 @@ namespace fluent {
       void push(double val);
       void push(bool val);
       void push(Object *obj);
+      void push_nil();
       size_t size() const { return this->array_.size(); }
       const Object& get(size_t idx) const;
       void to_msgpack(msgpack::packer<msgpack::sbuffer> *pk) const;
@@ -154,6 +166,9 @@ namespace fluent {
       Object* clone() const;
     };
 
+    // -----------------------------------------------------------------
+    // String class
+    // based on std::string
     class String : public Object {
     private:
       std::string val_;
@@ -168,6 +183,9 @@ namespace fluent {
       const std::string &val() const { return this->val_; }
     };
 
+    // -----------------------------------------------------------------
+    // Fixed Number class
+    // 
     class Fixnum : public Object {
     private:
       int val_;
@@ -181,7 +199,9 @@ namespace fluent {
       int val() const { return this->val_; }
     };
 
-    // Unsigned fixed num
+    // -----------------------------------------------------------------
+    // Unsigned Fixed Number class
+    // 
     class Ufixnum : public Object {
     private:
       unsigned int val_;
@@ -194,6 +214,9 @@ namespace fluent {
       unsigned int val() const { return this->val_; }
     };
     
+    // -----------------------------------------------------------------
+    // Float Number Class
+    // 
     class Float : public Object {
     private:
       double val_;
@@ -205,6 +228,9 @@ namespace fluent {
       double val() const { return this->val_; }
     };
 
+    // -----------------------------------------------------------------
+    // Boolean Class
+    // 
     class Bool : public Object {
     private:
       bool val_;
@@ -216,6 +242,19 @@ namespace fluent {
       bool val() const { return this->val_; }
     };
 
+    // -----------------------------------------------------------------
+    // Nil class
+    // That should be used for only static & const instance.
+    class Nil : public Object {
+    public:
+      Nil() {};
+      ~Nil() {};
+      void to_msgpack(msgpack::packer<msgpack::sbuffer> *pk) const;
+      void to_ostream(std::ostream &os) const { os << "(nil)"; }
+      Object* clone() const { return new Nil(); }
+      bool is_nil() const { return true; }
+    };
+    
   private:    
     time_t ts_;
     std::string tag_;

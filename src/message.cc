@@ -61,6 +61,9 @@ namespace fluent {
   bool Message::set(const std::string &key, bool val){
     return this->root_->set(key, val);
   }
+  bool Message::set_nil(const std::string &key){
+    return this->root_->set_nil(key);
+  }
   bool Message::del(const std::string &key){
     return this->root_->del(key);
   }
@@ -233,6 +236,20 @@ namespace fluent {
       return false;
     }
   }
+
+  bool Message::Map::set_nil(const std::string &key) {
+    if (this->map_.find(key) == this->map_.end()) {
+      // Create and insert value
+      debug(DBG, "create Nil for %s\n", key.c_str());
+      Nil *obj = new Nil();
+      this->map_.insert(std::make_pair(key, obj));
+      return true;
+    } else {
+      // Already exists
+      return false;
+    }
+  }
+
   
   bool Message::Map::del(const std::string &key) {
     auto it = this->map_.find(key);
@@ -317,7 +334,10 @@ namespace fluent {
   void Message::Array::push(Object *obj) {
     this->array_.push_back(obj);
   }
-
+  void Message::Array::push_nil() {
+    Object *v = new Nil();
+    this->array_.push_back(v);
+  }
   void Message::Array::to_msgpack(msgpack::packer<msgpack::sbuffer> *pk) const {
     pk->pack_array(this->array_.size());
     for(size_t i = 0; i < this->array_.size(); i++) {
@@ -396,5 +416,9 @@ namespace fluent {
   void Message::Bool::to_msgpack(msgpack::packer<msgpack::sbuffer> *pk) 
     const {
     pk->pack(this->val_);
-  }  
+  }
+
+  void Message::Nil::to_msgpack(msgpack::packer<msgpack::sbuffer> *pk) const {
+    pk->pack_nil();
+  }
 }
