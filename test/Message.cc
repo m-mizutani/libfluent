@@ -203,10 +203,12 @@ TEST(Message, MapGetObject) {
   obj->set("s", "test");
   obj->set("f", 3.141592);
   obj->set("b", true);
+  obj->set_nil("n");
   fluent::Message::Map *map = obj->retain_map("m");
   map->set("gnome", 1);
   fluent::Message::Array *arr = obj->retain_array("a");
   arr->push("druid");
+  arr->push_nil();
   
   // Check Key.
   EXPECT_TRUE(obj->has_key("i"));
@@ -215,6 +217,7 @@ TEST(Message, MapGetObject) {
   EXPECT_TRUE(obj->has_key("b"));
   EXPECT_TRUE(obj->has_key("m"));
   EXPECT_TRUE(obj->has_key("a"));
+  EXPECT_TRUE(obj->has_key("n"));
   EXPECT_FALSE(obj->has_key("x"));
 
   // Get objects.
@@ -224,6 +227,7 @@ TEST(Message, MapGetObject) {
   const fluent::Message::Object &obj_b = obj->get("b");
   const fluent::Message::Object &obj_m = obj->get("m");
   const fluent::Message::Object &obj_a = obj->get("a");
+  const fluent::Message::Object &obj_n = obj->get("n");
   EXPECT_THROW(obj->get("x"), fluent::Exception::KeyError);  
 
   // Check types.
@@ -233,6 +237,7 @@ TEST(Message, MapGetObject) {
   EXPECT_TRUE(obj_b.is<fluent::Message::Bool>());
   EXPECT_TRUE(obj_m.is<fluent::Message::Map>());
   EXPECT_TRUE(obj_a.is<fluent::Message::Array>());
+  EXPECT_TRUE(obj_n.is<fluent::Message::Nil>());
   
   // Convert to appropriate type.
   const fluent::Message::Fixnum &i = obj_i.as<fluent::Message::Fixnum>();
@@ -241,6 +246,7 @@ TEST(Message, MapGetObject) {
   const fluent::Message::Bool &b = obj_b.as<fluent::Message::Bool>();
   const fluent::Message::Map &m = obj_m.as<fluent::Message::Map>();
   const fluent::Message::Array &a = obj_a.as<fluent::Message::Array>();
+  const fluent::Message::Nil &n = obj_n.as<fluent::Message::Nil>();
   EXPECT_THROW(obj_i.as<fluent::Message::String>(),
                fluent::Exception::TypeError);
   EXPECT_THROW(obj_i.as<fluent::Message::Float>(),
@@ -255,10 +261,20 @@ TEST(Message, MapGetObject) {
   EXPECT_TRUE(m.has_key("gnome"));
   EXPECT_FALSE(m.has_key("x"));
   EXPECT_EQ(m.get("gnome").as<fluent::Message::Fixnum>().val(), 1);
-  EXPECT_EQ(a.size(), 1);
+  EXPECT_EQ(a.size(), 2);
   EXPECT_EQ(a.get(0).as<fluent::Message::String>().val(), "druid");
+  EXPECT_TRUE(a.get(1).as<fluent::Message::Nil>().is_nil());
+  
+  EXPECT_FALSE(i.is_nil());
+  EXPECT_FALSE(s.is_nil());
+  EXPECT_FALSE(f.is_nil());
+  EXPECT_FALSE(b.is_nil());
+  EXPECT_FALSE(m.is_nil());
+  EXPECT_FALSE(s.is_nil());
+  EXPECT_FALSE(a.is_nil());
+  EXPECT_TRUE(n.is_nil());
 
-  EXPECT_THROW(a.get(1), fluent::Exception::IndexError);
+  EXPECT_THROW(a.get(2), fluent::Exception::IndexError);
 }
 
 TEST(Message, clone) {
@@ -267,6 +283,7 @@ TEST(Message, clone) {
   msg1->set("s", "warlock");
   msg1->set("f", 3.141592);
   msg1->set("b", true);
+  msg1->set_nil("n");
   fluent::Message::Map *map = msg1->retain_map("m");
   map->set("hunter", 1);
   fluent::Message::Array *arr = msg1->retain_array("a");
@@ -285,6 +302,7 @@ TEST(Message, clone) {
   const fluent::Message::Object &obj_b = msg2->get("b");
   const fluent::Message::Object &obj_m = msg2->get("m");
   const fluent::Message::Object &obj_a = msg2->get("a");
+  const fluent::Message::Object &obj_n = msg2->get("n");
   EXPECT_THROW(msg2->get("x"), fluent::Exception::KeyError);  
 
   // Check types.
@@ -294,6 +312,10 @@ TEST(Message, clone) {
   EXPECT_TRUE(obj_b.is<fluent::Message::Bool>());
   EXPECT_TRUE(obj_m.is<fluent::Message::Map>());
   EXPECT_TRUE(obj_a.is<fluent::Message::Array>());
+  EXPECT_TRUE(obj_n.is<fluent::Message::Nil>());
+  // Nil check
+  EXPECT_FALSE(obj_i.is_nil());
+  EXPECT_TRUE(obj_n.is_nil());
   
   // Convert to appropriate type.
   const fluent::Message::Fixnum &i = obj_i.as<fluent::Message::Fixnum>();
@@ -302,6 +324,7 @@ TEST(Message, clone) {
   const fluent::Message::Bool &b = obj_b.as<fluent::Message::Bool>();
   const fluent::Message::Map &m = obj_m.as<fluent::Message::Map>();
   const fluent::Message::Array &a = obj_a.as<fluent::Message::Array>();
+  const fluent::Message::Nil &n = obj_n.as<fluent::Message::Nil>();
   EXPECT_THROW(obj_i.as<fluent::Message::String>(),
                fluent::Exception::TypeError);
   EXPECT_THROW(obj_i.as<fluent::Message::Float>(),
@@ -318,7 +341,7 @@ TEST(Message, clone) {
   EXPECT_EQ(m.get("hunter").as<fluent::Message::Fixnum>().val(), 1);
   EXPECT_EQ(a.size(), 1);
   EXPECT_EQ(a.get(0).as<fluent::Message::String>().val(), "druid");
-
+  EXPECT_TRUE(n.is_nil());
   EXPECT_THROW(a.get(1), fluent::Exception::IndexError);
 
   // Check independece among the original message and copied one.
