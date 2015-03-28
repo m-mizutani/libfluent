@@ -1,3 +1,7 @@
+2015-03-28: Version 1.0.8
+	New features
+	* Added interface of Logger to specify port number as std::string
+
 2015-03-21: Version 1.0.7
 	New features
 	* Added Nil as Message data type, set_nil/push_nil can be used now

@@ -54,6 +54,10 @@ namespace fluent {
     Emitter *e = new InetEmitter(host, port);
     this->emitter_.push_back(e);
   }
+  void Logger::new_forward(const std::string &host, const std::string &port) {
+    Emitter *e = new InetEmitter(host, port);
+    this->emitter_.push_back(e);
+  }
   void Logger::new_dumpfile(const std::string &fname) {
     Emitter *e = new FileEmitter(fname);
     this->emitter_.push_back(e);

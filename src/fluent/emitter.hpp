@@ -67,6 +67,7 @@ namespace fluent {
 
   public:
     InetEmitter(const std::string &host, int port);
+    InetEmitter(const std::string &host, const std::string &port);
     ~InetEmitter();
     void worker();
   };

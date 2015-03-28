@@ -85,6 +85,14 @@ namespace fluent {
     this->sock_ = new Socket(host, ss.str());
     this->start_worker();
   }
+  InetEmitter::InetEmitter(const std::string &host,
+                           const std::string &port) :
+    Emitter(), retry_limit_(0)
+  {
+    // Setup socket.
+    this->sock_ = new Socket(host, port);
+    this->start_worker();
+  }
   InetEmitter::~InetEmitter() {
     this->stop_worker();
     delete this->sock_;

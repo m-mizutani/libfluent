@@ -57,6 +57,23 @@ TEST_F(FluentTest, InetEmitter) {
   delete e;
 }
 
+TEST_F(FluentTest, InetEmitter_with_string_portnum) {
+  fluent::InetEmitter *e = new fluent::InetEmitter("localhost", "24224");
+  const std::string tag = "test.inet";
+  fluent::Message *msg = new fluent::Message(tag);
+  msg->set("url", "https://github.com");
+  msg->set("port", 443);
+
+  // msg should be deleted by Emitter after sending
+  e->emit(msg);
+  
+  std::string res_tag, res_ts, res_rec;
+  EXPECT_TRUE(get_line(&res_tag, &res_ts, &res_rec));
+  EXPECT_EQ(res_tag, tag);
+  EXPECT_EQ(res_rec, "{\"port\":443,\"url\":\"https://github.com\"}");
+  delete e;
+}
+
 
 TEST_F(FluentTest, InetEmitter_QueueLimit) {
   fluent::InetEmitter *e = new fluent::InetEmitter("localhost", 24224);
