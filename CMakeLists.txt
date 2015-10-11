@@ -26,9 +26,14 @@ TARGET_LINK_LIBRARIES(fluent msgpack pthread)
 ADD_EXECUTABLE(fluent-test ${TESTSRCS})
 TARGET_LINK_LIBRARIES(fluent-test fluent)
 
-INSTALL(TARGETS fluent LIBRARY DESTINATION lib)
-INSTALL(FILES src/fluent.hpp DESTINATION include/)
-INSTALL(FILES ${HEADERS} DESTINATION include/fluent)
-
 ADD_EXECUTABLE(fluent-bench tools/fluent-bench.cc)
 TARGET_LINK_LIBRARIES(fluent-bench fluent)
+
+INSTALL(TARGETS fluent
+  EXPORT fluentConfig
+  INCLUDES DESTINATION include
+  LIBRARY DESTINATION lib
+)
+INSTALL(FILES src/fluent.hpp DESTINATION include/)
+INSTALL(FILES ${HEADERS} DESTINATION include/fluent)
+INSTALL(EXPORT fluentConfig DESTINATION cmake)
