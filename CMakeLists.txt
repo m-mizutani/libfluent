@@ -26,10 +26,6 @@ FILE(GLOB HEADERS "src/fluent/*.hpp")
 
 ADD_LIBRARY(fluent SHARED ${BASESRCS})
 TARGET_LINK_LIBRARIES(fluent msgpack pthread)
-ADD_LIBRARY(fluent-static STATIC ${BASESRCS})
-TARGET_LINK_LIBRARIES(fluent-static msgpack pthread)
-SET_TARGET_PROPERTIES(fluent-static PROPERTIES OUTPUT_NAME fluent)
-
 
 ADD_EXECUTABLE(fluent-test ${TESTSRCS})
 TARGET_LINK_LIBRARIES(fluent-test fluent)
@@ -41,11 +37,6 @@ INSTALL(TARGETS fluent
   EXPORT fluentConfig
   INCLUDES DESTINATION include
   LIBRARY DESTINATION lib
-)
-INSTALL(TARGETS fluent-static
-  ARCHIVE DESTINATION lib
-  LIBRARY DESTINATION lib
-  COMPONENT library
 )
 INSTALL(FILES src/fluent.hpp DESTINATION include/)
 INSTALL(FILES ${HEADERS} DESTINATION include/fluent)

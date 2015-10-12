@@ -37,7 +37,7 @@ namespace fluent {
       std::string errmsg_;
     public:
       TypeError(const std::string &errmsg) : errmsg_(errmsg) {}
-      virtual ~TypeError() throw() {}
+      ~TypeError() {}
       virtual const char* what() const throw() {
         return this->errmsg_.c_str();
       }
@@ -48,7 +48,7 @@ namespace fluent {
       size_t idx_, max_;
     public:
       IndexError(size_t idx, size_t max) : idx_(idx), max_(max) {}
-      virtual ~IndexError() throw() {}
+      ~IndexError() {}
       virtual const char* what() const throw() {
         std::stringstream ss;
         ss << "out of range: " << this->idx_ << ", should < " <<
@@ -62,7 +62,7 @@ namespace fluent {
       std::string key_;
     public:
       KeyError(const std::string &key) : key_(key) {}
-      virtual ~KeyError() throw() {}
+      ~KeyError() {}
       virtual const char* what() const throw() {
         std::stringstream ss;
         ss << "key \"" << this->key_ << "\" is not found";

@@ -1,0 +1,31 @@
+language: cpp
+
+compiler:
+  - clang
+  - gcc
+os:
+  - osx
+  - linux
+matrix:
+  exclude:
+    - os: linux
+      compiler: clang
+
+before_install:
+  # update packages
+  - gem install msgpack
+  - if [ "$TRAVIS_OS_NAME" == "linux" ]; then sudo apt-get update -qq -y; fi
+  - if [ "$TRAVIS_OS_NAME" == "linux" ]; then sudo apt-get install -y build-essential cmake libtool ; fi
+  - if [ "$TRAVIS_OS_NAME" == "linux" ]; then wget https://github.com/msgpack/msgpack-c/releases/download/cpp-1.2.0/msgpack-1.2.0.tar.gz ; fi
+  - if [ "$TRAVIS_OS_NAME" == "linux" ]; then tar -xzvf msgpack-1.2.0.tar.gz ; fi
+  - if [ "$TRAVIS_OS_NAME" == "linux" ]; then cd msgpack-1.2.0 && ./configure --prefix=/usr && make && sudo make install && cd .. ; fi
+  - if [ "$TRAVIS_OS_NAME" == "osx" ]; then brew update ; fi
+  - if [ "$TRAVIS_OS_NAME" == "osx" ]; then brew install msgpack ; fi
+  
+     
+before_script:  
+  - cmake .
+
+script:
+  - make
+  - ./bin/fluent-test
