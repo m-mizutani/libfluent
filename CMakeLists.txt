@@ -17,7 +17,11 @@ SET(LIBRARY_OUTPUT_PATH ${PROJECT_BINARY_DIR}/lib)
 
 INCLUDE_DIRECTORIES(${INC_DIR} ./src)
 LINK_DIRECTORIES(${LIB_DIR})
-
+IF(${CMAKE_SYSTEM_NAME} MATCHES "Darwin")
+    INCLUDE_DIRECTORIES(/usr/local/include)
+    LINK_DIRECTORIES(/usr/local/lib)
+ENDIF()
+	
 # Build library
 
 FILE(GLOB BASESRCS "src/*.cc" "src/*.hpp")
