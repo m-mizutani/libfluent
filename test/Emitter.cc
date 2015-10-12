@@ -152,7 +152,7 @@ TEST(QueueEmitter, basic) {
 
   fluent::Message *msg1 = new fluent::Message(tag);
   msg1->set("seq", 1);
-  EXPECT_EQ(nullptr, q->pop());
+  EXPECT_TRUE(nullptr == q->pop());
   // Emit (store the message)
   EXPECT_TRUE(qe->emit(msg1));
 
@@ -167,7 +167,7 @@ TEST(QueueEmitter, basic) {
 
   // First message
   pmsg = q->pop();
-  ASSERT_NE(nullptr, pmsg);
+  ASSERT_TRUE(nullptr != pmsg);
   const fluent::Message::Fixnum &fn1 =
     pmsg->get("seq").as<fluent::Message::Fixnum>();
   EXPECT_EQ(1, fn1.val());
@@ -175,12 +175,12 @@ TEST(QueueEmitter, basic) {
 
   // Second message
   pmsg = q->pop();
-  ASSERT_NE(nullptr, pmsg);
+  ASSERT_TRUE(nullptr != pmsg);
   const fluent::Message::Fixnum &fn2 =
     pmsg->get("seq").as<fluent::Message::Fixnum>();
   EXPECT_EQ(2, fn2.val());
   delete pmsg;
 
   // No messages.
-  EXPECT_EQ(nullptr, q->pop());
+  EXPECT_TRUE(nullptr == q->pop());
 }
