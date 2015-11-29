@@ -76,7 +76,14 @@ namespace fluent {
   
   
   Message* Logger::retain_message(const std::string &tag) {
-    Message *msg = new Message(tag);
+    Message *msg;
+    if (this->tag_prefix_.empty()) {
+      msg = new Message(tag);
+    } else {
+      std::string cattag = this->tag_prefix_ + "." + tag;
+      msg = new Message(cattag);
+    }
+
     this->msg_set_.insert(msg);
     return msg;
   }
@@ -111,4 +118,7 @@ namespace fluent {
     }
   }
 
+  void Logger::set_tag_prefix(const std::string &tag_prefix) {
+    this->tag_prefix_ = tag_prefix;
+  }
 }

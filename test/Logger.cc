@@ -107,3 +107,13 @@ TEST(Logger, QueueEmitter) {
   
   delete logger;
 }
+
+TEST(Logger, TagPrefix) {
+  fluent::Logger *logger = new fluent::Logger();
+  fluent::Message* noprefix_msg = logger->retain_message("blue");
+  EXPECT_EQ(noprefix_msg->tag(), "blue");
+
+  logger->set_tag_prefix("dark");
+  fluent::Message *withprefix_msg = logger->retain_message("blue");
+  EXPECT_EQ(withprefix_msg->tag(), "dark.blue");
+}

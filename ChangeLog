@@ -1,3 +1,7 @@
+2015-11-29: Version 1.0.9
+	New features
+	* Added Logger::set_tag_prefix to specify default tag prefix
+
 2015-03-28: Version 1.0.8
 	New features
 	* Added interface of Logger to specify port number as std::string

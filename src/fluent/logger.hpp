@@ -43,6 +43,8 @@ namespace fluent {
     std::vector<Emitter*> emitter_;
     std::string errmsg_;
     std::vector<MsgQueue*> queue_;
+    std::string tag_prefix_;
+    
   public:
     Logger();
     ~Logger();
@@ -56,6 +58,7 @@ namespace fluent {
     bool emit(Message *msg);
     const std::string& errmsg() const { return this->errmsg_; }
     void set_queue_limit(size_t limit);
+    void set_tag_prefix(const std::string &prefix);
   };
 
 }
