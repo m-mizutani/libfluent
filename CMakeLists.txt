@@ -28,20 +28,29 @@ FILE(GLOB BASESRCS "src/*.cc" "src/*.hpp")
 FILE(GLOB TESTSRCS "test/*.cc")
 FILE(GLOB HEADERS "src/fluent/*.hpp")
 
-ADD_LIBRARY(fluent SHARED ${BASESRCS})
-TARGET_LINK_LIBRARIES(fluent msgpack pthread)
+ADD_LIBRARY(objlib OBJECT ${BASESRCS})
+SET_PROPERTY(TARGET ${objlib} PROPERTY POSITION_INDEPENDENT_CODE 1)
+ADD_LIBRARY(fluent-shared SHARED $<TARGET_OBJECTS:objlib>)
+ADD_LIBRARY(fluent-static STATIC $<TARGET_OBJECTS:objlib>)
+
+TARGET_LINK_LIBRARIES(fluent-shared msgpack pthread)
+TARGET_LINK_LIBRARIES(fluent-static msgpack pthread)
+SET_TARGET_PROPERTIES(fluent-shared PROPERTIES OUTPUT_NAME fluent)
+SET_TARGET_PROPERTIES(fluent-static PROPERTIES OUTPUT_NAME fluent)
 
 ADD_EXECUTABLE(fluent-test ${TESTSRCS})
-TARGET_LINK_LIBRARIES(fluent-test fluent)
+TARGET_LINK_LIBRARIES(fluent-test fluent-shared)
 
 ADD_EXECUTABLE(fluent-bench tools/fluent-bench.cc)
-TARGET_LINK_LIBRARIES(fluent-bench fluent)
+TARGET_LINK_LIBRARIES(fluent-bench fluent-shared)
 
-INSTALL(TARGETS fluent
+INSTALL(TARGETS fluent-shared
   EXPORT fluentConfig
   INCLUDES DESTINATION include
   LIBRARY DESTINATION lib
 )
+INSTALL(TARGETS fluent-static DESTINATION lib)
+
 INSTALL(FILES src/fluent.hpp DESTINATION include/)
 INSTALL(FILES ${HEADERS} DESTINATION include/fluent)
 INSTALL(EXPORT fluentConfig DESTINATION cmake)
