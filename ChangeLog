@@ -1,3 +1,7 @@
+2015-12-29: Version 1.0.10
+	New features
+	* Added cmake settings to compile and install static library
+
 2015-11-29: Version 1.0.9
 	New features
 	* Added Logger::set_tag_prefix to specify default tag prefix
