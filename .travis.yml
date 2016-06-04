@@ -10,7 +10,9 @@ matrix:
   exclude:
     - os: linux
       compiler: clang
-
+rvm:
+  - 2.2
+  
 before_install:
   # update packages
   - cmake --version
