@@ -50,7 +50,7 @@ TEST_F(FluentTest, Logger) {
   std::string res_tag, res_ts, res_rec;
   get_line(&res_tag, &res_ts, &res_rec);
   EXPECT_EQ(res_tag, tag);
-  EXPECT_EQ(res_rec, "{\"port\":443,\"url\":\"https://github.com\"}");
+  EXPECT_EQ(res_rec, "{\"port\"=>443, \"url\"=>\"https://github.com\"}");
 
   delete logger;
 }
@@ -71,7 +71,7 @@ TEST_F(FluentTest, QueueLimit) {
   std::string res_tag, res_ts, res_rec;
   get_line(&res_tag, &res_ts, &res_rec);
   EXPECT_EQ(res_tag, tag);
-  EXPECT_EQ(res_rec, "{\"port\":443,\"url\":\"https://github.com\"}");
+  EXPECT_EQ(res_rec, "{\"port\"=>443, \"url\"=>\"https://github.com\"}");
   this->stop_fluent();
 
   // First emit after stopping fluentd should be succeess because of buffer.

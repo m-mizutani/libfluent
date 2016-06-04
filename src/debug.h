@@ -37,7 +37,7 @@
     struct tm td;                                                       \
     struct timeval tv;                                                  \
     struct timezone tz;                                                 \
-    FILE * out = stdout;                                                \
+    FILE * out = stderr;                                                \
     if (X) {                                                            \
       gettimeofday (&tv, &tz);                                          \
       localtime_r (&tv.tv_sec, &td);                                    \

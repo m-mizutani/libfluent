@@ -52,8 +52,8 @@ TEST_F(FluentTest, InetEmitter) {
   
   std::string res_tag, res_ts, res_rec;
   EXPECT_TRUE(get_line(&res_tag, &res_ts, &res_rec));
-  EXPECT_EQ(res_tag, tag);
-  EXPECT_EQ(res_rec, "{\"port\":443,\"url\":\"https://github.com\"}");
+  EXPECT_EQ(tag, res_tag);
+  EXPECT_EQ("{\"port\"=>443, \"url\"=>\"https://github.com\"}", res_rec);
   delete e;
 }
 
@@ -70,7 +70,7 @@ TEST_F(FluentTest, InetEmitter_with_string_portnum) {
   std::string res_tag, res_ts, res_rec;
   EXPECT_TRUE(get_line(&res_tag, &res_ts, &res_rec));
   EXPECT_EQ(res_tag, tag);
-  EXPECT_EQ(res_rec, "{\"port\":443,\"url\":\"https://github.com\"}");
+  EXPECT_EQ(res_rec, "{\"port\"=>443, \"url\"=>\"https://github.com\"}");
   delete e;
 }
 
@@ -87,7 +87,7 @@ TEST_F(FluentTest, InetEmitter_QueueLimit) {
   
   ASSERT_TRUE(get_line(&res_tag, &res_ts, &res_rec));
   EXPECT_EQ(res_tag, tag);
-  EXPECT_EQ(res_rec, "{\"num\":0}");
+  EXPECT_EQ(res_rec, "{\"num\"=>0}");
   this->stop_fluent();
 
   // First emit after stopping fluentd should be succeess

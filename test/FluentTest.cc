@@ -51,31 +51,34 @@ void FluentTest::start_fluent() {
   if (pid == 0) {
     // Running as child.
     std::vector<std::string> arg = {
-      "fluentd", "-q", "-c", "test/fluentd.conf"
+      // "./test/helper/tcp_server.rb",
     };
-        
-    char **argv = new char*[arg.size() + 1];
+
+    /*
+    char *argv = new char*[arg.size() + 1];
     for (size_t i = 0; i < arg.size(); i++) {
       argv[i] = const_cast<char*>(arg[i].c_str());
     }
     argv[arg.size()] = NULL;
-
+    */
+    char *argv[1];
+    argv[0] = NULL;
+    
     close(pipe_c2p[RP]);
     dup2(pipe_c2p[WP], 1);
     close(pipe_c2p[WP]);
 
-    if (execvp("fluentd", static_cast<char *const *>(argv)) < 0) {
+    if (execvp("./test/helper/tcp_server.rb", static_cast<char *const *>(argv)) < 0) {
       perror("execvp");        
     }
   } else {
     // Running as parent.
     this->pid_ = pid;
 
-    int flags = fcntl(pipe_c2p[RP], F_GETFL, 0);
+     int flags = fcntl(pipe_c2p[RP], F_GETFL, 0);
     flags |= O_NONBLOCK;
     fcntl(pipe_c2p[RP], F_SETFL, flags);
-      
-      
+       
     this->pipe_fd_ = pipe_c2p[RP];
     this->pipe_ = fdopen(this->pipe_fd_, "r");
     ASSERT_TRUE(this->pipe_ != NULL);
@@ -96,7 +99,6 @@ bool FluentTest::get_line(std::string *tag, std::string *ts, std::string *rec,
   static const bool DBG = false;
   char buf[BUFSIZ];
 
-  sleep(1);
   time_t start_ts = time(nullptr);
   char *res;
   while (nullptr == (res = fgets(buf, BUFSIZ, this->pipe_))) {
@@ -106,22 +108,23 @@ bool FluentTest::get_line(std::string *tag, std::string *ts, std::string *rec,
     }
   }
     
-  debug(false, "buf = %s", buf);
   std::string line(buf);
 
-  size_t date_ptr = line.find(" ");
-  size_t time_ptr = line.find(" ", date_ptr + 1);
-  size_t tag_ptr  = line.find(" ", time_ptr + 1);
-  size_t rec_ptr  = line.find(" ", tag_ptr  + 1);
+  size_t tag_ptr = line.find(" ");
+  size_t ts_ptr  = line.find(" ", tag_ptr + 1);
+  size_t rec_ptr = line.find(" ", ts_ptr + 1);
 
-  debug(DBG, "date_ptr = %lu", date_ptr);
-  debug(DBG, "time_ptr = %lu", time_ptr);
-  debug(DBG, "tag_ptr  = %lu", tag_ptr);
-  debug(DBG, "rec_ptr  = %lu", rec_ptr);
+  debug(DBG, "tag_ptr = %lu", tag_ptr);
+  debug(DBG, "ts_ptr  = %lu", ts_ptr);
+  debug(DBG, "rec_ptr = %lu", rec_ptr);
 
-  ts->assign(line, 0, tag_ptr);
-  tag->assign(line, tag_ptr + 1, rec_ptr - tag_ptr - 2);
-  rec->assign(line, rec_ptr + 1, line.length() - rec_ptr - 2);
+  tag->assign(line, 0, tag_ptr);
+  ts->assign(line,  tag_ptr + 1, ts_ptr - tag_ptr);
+  rec->assign(line, ts_ptr + 1, line.length() - 2 - ts_ptr);
+  debug(DBG, "ts=%s", ts->c_str());
+  debug(DBG, "msg=%s", rec->c_str());
+  debug(DBG, "%s", line.c_str());
+  
   return true;
 }
 
