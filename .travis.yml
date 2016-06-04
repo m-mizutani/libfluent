@@ -16,7 +16,7 @@ rvm:
 before_install:
   # update packages
   - cmake --version
-  - gem install msgpack fluentd
+  - gem install msgpack 
   - if [ "$TRAVIS_OS_NAME" == "linux" ]; then sudo apt-get update -qq -y; fi
   - if [ "$TRAVIS_OS_NAME" == "linux" ]; then sudo apt-get install -y libtool ; fi
   - if [ "$TRAVIS_OS_NAME" == "linux" ]; then wget --no-check-certificate https://cmake.org/files/v3.3/cmake-3.3.2.tar.gz ; fi
