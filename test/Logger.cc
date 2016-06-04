@@ -80,12 +80,18 @@ TEST_F(FluentTest, QueueLimit) {
   msg->set("port", 443);
   EXPECT_TRUE(logger->emit(msg));
 
-  // Second emit should be fail because buffer is full.
+  // Second emit may be fail but do not test because of non blocking socket.
+  msg = logger->retain_message(tag);
+  msg->set("url", "https://github.com");
+  msg->set("port", 443);
+  logger->emit(msg);
+
+  // Third emit should be fail because buffer is full.
   msg = logger->retain_message(tag);
   msg->set("url", "https://github.com");
   msg->set("port", 443);
   EXPECT_FALSE(logger->emit(msg));
-
+  
   delete logger;
 }
 
