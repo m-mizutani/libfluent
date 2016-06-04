@@ -51,7 +51,7 @@ void FluentTest::start_fluent() {
   if (pid == 0) {
     // Running as child.
     std::vector<std::string> arg = {
-      "fluentd", "-q", "--no-supervisor", "-c", "test/fluentd.conf"
+      "fluentd", "-q", "-c", "test/fluentd.conf"
     };
         
     char **argv = new char*[arg.size() + 1];

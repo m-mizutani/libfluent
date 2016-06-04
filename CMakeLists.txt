@@ -36,8 +36,8 @@ ENDIF( CMAKE_SYSTEM_PROCESSOR STREQUAL "x86_64" )
 ADD_LIBRARY(fluent-shared SHARED $<TARGET_OBJECTS:objlib>)
 ADD_LIBRARY(fluent-static STATIC $<TARGET_OBJECTS:objlib>)
 
-TARGET_LINK_LIBRARIES(fluent-shared msgpack pthread)
-TARGET_LINK_LIBRARIES(fluent-static msgpack pthread)
+TARGET_LINK_LIBRARIES(fluent-shared msgpackc pthread)
+TARGET_LINK_LIBRARIES(fluent-static msgpackc pthread)
 SET_TARGET_PROPERTIES(fluent-shared PROPERTIES OUTPUT_NAME fluent)
 SET_TARGET_PROPERTIES(fluent-static PROPERTIES OUTPUT_NAME fluent)
 
