@@ -74,7 +74,7 @@ namespace fluent {
 
   // ----------------------------------------------------------------
   // InetEmitter
-  const int InetEmitter::WAIT_MAX = 120 * 1000;
+  const int InetEmitter::WAIT_MAX = 30 * 1000;
 
   InetEmitter::InetEmitter(const std::string &host, int port) :
     Emitter(), retry_limit_(0)
