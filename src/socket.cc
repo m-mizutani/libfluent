@@ -99,16 +99,25 @@ namespace fluent {
     }
 
     if (rp == NULL) {
-      // throw Exception("no avaiable address for " + this->host_);
+      // throw Exception("no available address for " + this->host_);
       rc = false;
     }
-    
+
     freeaddrinfo(result);
     return rc;
   }
   bool Socket::send(void *data, size_t len) {
+#ifdef _WIN32
+    if (SOCKET_ERROR == ::send(this->sock_, (char*)data, len, 0)) {
+      LPTSTR err = nullptr;
+      auto error = WSAGetLastError();
+      FormatMessage(FORMAT_MESSAGE_ALLOCATE_BUFFER | FORMAT_MESSAGE_FROM_SYSTEM,
+              nullptr, error, 0, (LPTSTR)&err, 0, nullptr);
+      this->errmsg_.assign(err);
+#else
     if (0 > ::write(this->sock_, data, len)) {
       this->errmsg_.assign(strerror(errno));
+#endif // _WIN32
       debug(false, "err: %s", this->errmsg_.c_str());
       this->is_connected_ = false;
       ::close(this->sock_);
