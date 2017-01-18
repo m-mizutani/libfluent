@@ -49,7 +49,7 @@ namespace fluent {
   }
 
   bool Emitter::emit(Message *msg) {
-    debug(false, "emit %p", msg);
+    debug(DBG, "emit %p", msg);
     bool rc = this->queue_.push(msg);
     return rc;
   }
@@ -108,8 +108,6 @@ namespace fluent {
   }
 
   bool InetEmitter::connect() {
-    static const bool DBG = false;
-
     for (size_t i = 0; this->retry_limit_ == 0 || i < this->retry_limit_;
          i++) {
 
@@ -153,8 +151,9 @@ namespace fluent {
         msgpack::packer <msgpack::sbuffer> pk(&buf);
         msg->to_msgpack(&pk);
 
-        debug(false, "sending msg %p", msg);
+        debug(DBG, "sending msg %p", msg);
         while(!this->sock_->send(buf.data(), buf.size())) {
+          debug(DBG, "socket error: %s", this->sock_->errmsg().c_str());
           // std::cerr << "socket error: " << this->sock_->errmsg() << std::endl;
           if (!this->connect()) {
             abort_loop = true;

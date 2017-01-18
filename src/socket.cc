@@ -50,7 +50,7 @@ namespace fluent {
     ::close(this->sock_);
   }
   bool Socket::connect() {
-    const bool DBG = false;
+    const bool DBG = true;
     bool rc = true;
     debug(DBG, "host=%s, port=%s", this->host_.c_str(), this->port_.c_str());
 

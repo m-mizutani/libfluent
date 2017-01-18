@@ -123,14 +123,14 @@ namespace fluent {
     ::pthread_mutex_lock (&(this->mutex_));
     debug(DBG, "entered lock");
 
-    debug(DBG, "PUSH: count:%lu, limit:%lu", this->count(), this->limit());
+    debug(DBG, "PUSH: count:%zu, limit:%zu", this->count(), this->limit());
     if (this->term_) {
       // do not accept more msg because working thread going to shutdown.
     } else {
       rc = this->MsgQueue::push(msg);
       ::pthread_cond_signal (&(this->cond_));
     }
-    debug(DBG, "PUSHED: count:%lu, limit:%lu", this->count(), this->limit());
+    debug(DBG, "PUSHED: count:%zu, limit:%zu", this->count(), this->limit());
     
     ::pthread_mutex_unlock (&(this->mutex_));
     debug(DBG, "left lock");
