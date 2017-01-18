@@ -188,9 +188,12 @@ namespace fluent {
   }
   FileEmitter::FileEmitter(int fd) : Emitter(), fd_(fd),
                                      enabled_(false), opened_(false) {
+#ifndef _WIN32
     if (fcntl(fd, F_GETFL) < 0 && errno == EBADF) {
       this->set_errmsg("Invalid file descriptor");
-    } else {
+	} else
+#endif
+	{
       this->enabled_ = true;
       this->start_worker();
     }
