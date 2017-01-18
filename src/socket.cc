@@ -51,7 +51,9 @@
 namespace fluent {
   Socket::Socket(const std::string &host, const std::string &port) :
     host_(host), port_(port), is_connected_(false) {
+#ifndef _WIN32
     signal(SIGPIPE, SIG_IGN);
+#endif
   }
   Socket::~Socket() {
     ::close(this->sock_);
