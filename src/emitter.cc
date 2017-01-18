@@ -34,6 +34,7 @@
 #include <math.h>
 #include <unistd.h>
 #include <errno.h>
+#include <random>
 
 #include "./fluent/emitter.hpp"
 #include "./debug.h"
@@ -82,16 +83,24 @@ namespace fluent {
     // Setup socket.
     std::stringstream ss;
     ss << port;
-    this->sock_ = new Socket(host, ss.str());
-    this->start_worker();
+    Init(host, ss.str());
   }
   InetEmitter::InetEmitter(const std::string &host,
                            const std::string &port) :
     Emitter(), retry_limit_(0)
   {
+    Init(host, port);
+  }
+  void InetEmitter::Init(const std::string &host,
+						 const std::string &port) {
+    // Setup random engine
+    mt_rand = std::mt19937(random_device());
+    rand_dist = std::uniform_int_distribution<int>(0, INT_MAX);
+
     // Setup socket.
     this->sock_ = new Socket(host, port);
     this->start_worker();
+
   }
   InetEmitter::~InetEmitter() {
     this->stop_worker();
@@ -118,7 +127,7 @@ namespace fluent {
       if (wait_msec_max > WAIT_MAX) {
         wait_msec_max = WAIT_MAX;
       }
-      int wait_msec = random() % wait_msec_max;
+      int wait_msec = rand_dist(mt_rand) % wait_msec_max;
 
       debug(DBG, "reconnect after %d msec...", wait_msec);
       usleep(wait_msec * 1000);

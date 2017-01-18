@@ -61,6 +61,12 @@ namespace fluent {
   private:
     static const int WAIT_MAX;
 
+    void Init(const std::string &host, const std::string &port);
+
+    std::random_device random_device;
+    std::mt19937 mt_rand;
+    std::uniform_int_distribution<int> rand_dist;
+
     Socket *sock_;
     size_t retry_limit_;
     bool connect();
