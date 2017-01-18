@@ -37,6 +37,12 @@
 
 namespace fluent {
   Logger::Logger() {
+#ifdef _WIN32
+      WORD wVersionRequested;
+      WSADATA wsaData;
+      wVersionRequested = MAKEWORD(2, 2);
+      WSAStartup(wVersionRequested, &wsaData);
+#endif // _WIN32
   }
   Logger::~Logger() {
     // delete not used messages.
@@ -48,6 +54,10 @@ namespace fluent {
     }
     std::for_each(this->queue_.begin(), this->queue_.end(),
                   [](MsgQueue* const &x) { delete x; });
+
+#ifdef _WIN32
+	  WSACleanup();
+#endif // _WIN32
   }
 
   void Logger::new_forward(const std::string &host, int port) {
