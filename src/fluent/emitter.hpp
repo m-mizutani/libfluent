@@ -29,6 +29,7 @@
 
 #include <string>
 #include <pthread.h>
+#include <random>
 #include "./socket.hpp"
 #include "./queue.hpp"
 

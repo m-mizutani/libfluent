@@ -34,7 +34,6 @@
 #include <math.h>
 #include <unistd.h>
 #include <errno.h>
-#include <random>
 
 #include "./fluent/emitter.hpp"
 #include "./debug.h"
