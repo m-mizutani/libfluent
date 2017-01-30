@@ -62,7 +62,7 @@ namespace fluent {
   private:
     static const int WAIT_MAX;
 
-    void Init(const std::string &host, const std::string &port);
+    void init(const std::string &host, const std::string &port);
 
     std::random_device random_device;
     std::mt19937 mt_rand;

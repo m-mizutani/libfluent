@@ -83,15 +83,15 @@ namespace fluent {
     // Setup socket.
     std::stringstream ss;
     ss << port;
-    Init(host, ss.str());
+    init(host, ss.str());
   }
   InetEmitter::InetEmitter(const std::string &host,
                            const std::string &port) :
     Emitter(), retry_limit_(0)
   {
-    Init(host, port);
+    init(host, port);
   }
-  void InetEmitter::Init(const std::string &host,
+  void InetEmitter::init(const std::string &host,
 						 const std::string &port) {
     // Setup random engine
     mt_rand = std::mt19937(random_device());
