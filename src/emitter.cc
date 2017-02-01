@@ -48,7 +48,7 @@ namespace fluent {
   }
 
   bool Emitter::emit(Message *msg) {
-    debug(false, "emit %p", msg);
+    debug(DBG, "emit %p", msg);
     bool rc = this->queue_.push(msg);
     return rc;
   }
@@ -82,16 +82,24 @@ namespace fluent {
     // Setup socket.
     std::stringstream ss;
     ss << port;
-    this->sock_ = new Socket(host, ss.str());
-    this->start_worker();
+    init(host, ss.str());
   }
   InetEmitter::InetEmitter(const std::string &host,
                            const std::string &port) :
     Emitter(), retry_limit_(0)
   {
+    init(host, port);
+  }
+  void InetEmitter::init(const std::string &host,
+						 const std::string &port) {
+    // Setup random engine
+    mt_rand = std::mt19937(random_device());
+    rand_dist = std::uniform_int_distribution<int>(0, INT_MAX);
+
     // Setup socket.
     this->sock_ = new Socket(host, port);
     this->start_worker();
+
   }
   InetEmitter::~InetEmitter() {
     this->stop_worker();
@@ -99,8 +107,6 @@ namespace fluent {
   }
 
   bool InetEmitter::connect() {
-    static const bool DBG = false;
-
     for (size_t i = 0; this->retry_limit_ == 0 || i < this->retry_limit_;
          i++) {
 
@@ -118,7 +124,7 @@ namespace fluent {
       if (wait_msec_max > WAIT_MAX) {
         wait_msec_max = WAIT_MAX;
       }
-      int wait_msec = random() % wait_msec_max;
+      int wait_msec = rand_dist(mt_rand) % wait_msec_max;
 
       debug(DBG, "reconnect after %d msec...", wait_msec);
       usleep(wait_msec * 1000);
@@ -144,8 +150,9 @@ namespace fluent {
         msgpack::packer <msgpack::sbuffer> pk(&buf);
         msg->to_msgpack(&pk);
 
-        debug(false, "sending msg %p", msg);
+        debug(DBG, "sending msg %p", msg);
         while(!this->sock_->send(buf.data(), buf.size())) {
+          debug(DBG, "socket error: %s", this->sock_->errmsg().c_str());
           // std::cerr << "socket error: " << this->sock_->errmsg() << std::endl;
           if (!this->connect()) {
             abort_loop = true;
@@ -180,9 +187,12 @@ namespace fluent {
   }
   FileEmitter::FileEmitter(int fd) : Emitter(), fd_(fd),
                                      enabled_(false), opened_(false) {
+#ifndef _WIN32
     if (fcntl(fd, F_GETFL) < 0 && errno == EBADF) {
       this->set_errmsg("Invalid file descriptor");
-    } else {
+	} else
+#endif
+	{
       this->enabled_ = true;
       this->start_worker();
     }

@@ -24,16 +24,23 @@
  * POSSIBILITY OF SUCH DAMAGE.
  */
 
+#ifdef _WIN32
+#include <winsock2.h>
+#include "windows.h"
+#include <ws2tcpip.h>
+#else
+#include <sys/socket.h>
+#include <netinet/in.h>
+#include <netdb.h>
+#include <arpa/inet.h>
+#endif
+
 #include <sys/stat.h>
 #include <fcntl.h>
 #include <string.h>
 #include <unistd.h>
 #include <stdio.h>
 #include <sys/types.h>
-#include <sys/socket.h>
-#include <netinet/in.h>
-#include <netdb.h>
-#include <arpa/inet.h>
 #include <errno.h>
 #include <signal.h>
 
@@ -44,13 +51,15 @@
 namespace fluent {
   Socket::Socket(const std::string &host, const std::string &port) :
     host_(host), port_(port), is_connected_(false) {
+#ifndef _WIN32
     signal(SIGPIPE, SIG_IGN);
+#endif
   }
   Socket::~Socket() {
     ::close(this->sock_);
   }
   bool Socket::connect() {
-    const bool DBG = false;
+    const bool DBG = true;
     bool rc = true;
     debug(DBG, "host=%s, port=%s", this->host_.c_str(), this->port_.c_str());
 
@@ -90,16 +99,25 @@ namespace fluent {
     }
 
     if (rp == NULL) {
-      // throw Exception("no avaiable address for " + this->host_);
+      // throw Exception("no available address for " + this->host_);
       rc = false;
     }
-    
+
     freeaddrinfo(result);
     return rc;
   }
   bool Socket::send(void *data, size_t len) {
+#ifdef _WIN32
+    if (SOCKET_ERROR == ::send(this->sock_, (char*)data, len, 0)) {
+      LPTSTR err = nullptr;
+      auto error = WSAGetLastError();
+      FormatMessage(FORMAT_MESSAGE_ALLOCATE_BUFFER | FORMAT_MESSAGE_FROM_SYSTEM,
+              nullptr, error, 0, (LPTSTR)&err, 0, nullptr);
+      this->errmsg_.assign(err);
+#else
     if (0 > ::write(this->sock_, data, len)) {
       this->errmsg_.assign(strerror(errno));
+#endif // _WIN32
       debug(false, "err: %s", this->errmsg_.c_str());
       this->is_connected_ = false;
       ::close(this->sock_);
