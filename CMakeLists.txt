@@ -13,6 +13,8 @@ SET(CMAKE_SHARED_LINKER_FLAGS "-dynamiclib")
 SET(EXECUTABLE_OUTPUT_PATH ${PROJECT_BINARY_DIR}/bin)
 SET(LIBRARY_OUTPUT_PATH ${PROJECT_BINARY_DIR}/lib)
 
+OPTION(FLUENT_INSTALL "install libfluent" ON)
+
 # cmake_policy(SET CMP0015 NEW)
 
 INCLUDE_DIRECTORIES(${INC_DIR} ./src)
@@ -47,13 +49,14 @@ TARGET_LINK_LIBRARIES(fluent-test fluent-shared)
 ADD_EXECUTABLE(fluent-bench tools/fluent-bench.cc)
 TARGET_LINK_LIBRARIES(fluent-bench fluent-shared)
 
-INSTALL(TARGETS fluent-shared
-  EXPORT fluentConfig
-  INCLUDES DESTINATION include
-  LIBRARY DESTINATION lib
-)
-INSTALL(TARGETS fluent-static DESTINATION lib)
-
-INSTALL(FILES src/fluent.hpp DESTINATION include/)
-INSTALL(FILES ${HEADERS} DESTINATION include/fluent)
-INSTALL(EXPORT fluentConfig DESTINATION cmake)
+IF(FLUENT_INSTALL)
+  INSTALL(TARGETS fluent-shared
+    EXPORT fluentConfig
+    INCLUDES DESTINATION include
+    LIBRARY DESTINATION lib
+  )
+  INSTALL(TARGETS fluent-static DESTINATION lib)
+  INSTALL(FILES src/fluent.hpp DESTINATION include/)
+  INSTALL(FILES ${HEADERS} DESTINATION include/fluent)
+  INSTALL(EXPORT fluentConfig DESTINATION cmake)
+ENDIF(FLUENT_INSTALL)
