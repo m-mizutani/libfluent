@@ -38,10 +38,12 @@
 namespace fluent {
   Logger::Logger() {
 #ifdef _WIN32
-      WORD wVersionRequested;
-      WSADATA wsaData;
-      wVersionRequested = MAKEWORD(2, 2);
-      WSAStartup(wVersionRequested, &wsaData);
+#ifndef FLUENTSKIPSTARTWINSOCK
+    WORD wVersionRequested;
+    WSADATA wsaData;
+    wVersionRequested = MAKEWORD(2, 2);
+    WSAStartup(wVersionRequested, &wsaData);
+#endif // FLUENTSKIPSTARTWINSOCK
 #endif // _WIN32
   }
   Logger::~Logger() {
@@ -56,7 +58,9 @@ namespace fluent {
                   [](MsgQueue* const &x) { delete x; });
 
 #ifdef _WIN32
-	  WSACleanup();
+#ifndef FLUENTSKIPSTARTWINSOCK
+    WSACleanup();
+#endif // FLUENTSKIPSTARTWINSOCK
 #endif // _WIN32
   }
 
