@@ -180,14 +180,81 @@ TEST_F(MessageTest, NestMap) {
   EXPECT_TRUE(0 == memcmp(sbuf_.data(), expect.data(), sbuf_.size()));
 }
 
-TEST_F(MessageTest, NotOverwriteMap) {
+TEST_F(MessageTest, AllowMapOverwriteValue) {
   fluent::Message::Map *obj = new fluent::Message::Map();
 
   EXPECT_TRUE(obj->set("a", 1));
-  EXPECT_FALSE(obj->set("a", 2));
+  EXPECT_TRUE(obj->set("a", 2));
 
-  std::string expect = encode_msgpack("{'a'=>1}");
+  std::string expect = encode_msgpack("{'a'=>2}");
 
+  obj->to_msgpack(&pkr_);
+  EXPECT_EQ(sbuf_.size(), expect.length());
+  EXPECT_TRUE(0 == memcmp(sbuf_.data(), expect.data(), sbuf_.size()));
+}
+
+TEST_F(MessageTest, AllowMapOverwriteRetain1) {
+  fluent::Message::Map *obj = new fluent::Message::Map();
+
+  EXPECT_TRUE(obj->set("a", 1));
+  fluent::Message::Map *m1 = obj->retain_map("a");
+  ASSERT_NE(m1, nullptr);
+  m1->set("b", 2);
+
+  std::string expect = encode_msgpack("{'a'=>{'b'=>2}}");
+
+  obj->to_msgpack(&pkr_);
+  EXPECT_EQ(sbuf_.size(), expect.length());
+  EXPECT_TRUE(0 == memcmp(sbuf_.data(), expect.data(), sbuf_.size()));
+}
+
+TEST_F(MessageTest, AllowMapOverwriteRetain2) {
+  // If retaining map with same key, retain_map should return same object.
+  fluent::Message::Map *obj = new fluent::Message::Map();
+  fluent::Message::Map *m1 = obj->retain_map("a");
+  ASSERT_NE(m1, nullptr);
+  m1->set("b", 2);
+  fluent::Message::Map *m2 = obj->retain_map("a");
+  EXPECT_EQ(m1, m2);
+  
+  std::string expect = encode_msgpack("{'a'=>{'b'=>2}}");
+  obj->to_msgpack(&pkr_);
+  EXPECT_EQ(sbuf_.size(), expect.length());
+  EXPECT_TRUE(0 == memcmp(sbuf_.data(), expect.data(), sbuf_.size()));
+}
+
+TEST_F(MessageTest, AllowMapOverwriteRetain3) {
+  // If retaining array with same key, map should be replace with array.
+  fluent::Message::Map *obj = new fluent::Message::Map();
+  fluent::Message::Map *m1 = obj->retain_map("a");
+  ASSERT_NE(m1, nullptr);
+  m1->set("b", 2);
+  
+  fluent::Message::Array *a1 = obj->retain_array("a");
+  EXPECT_NE(static_cast<fluent::Message::Object*>(m1),
+            static_cast<fluent::Message::Object*>(a1));
+
+  a1->push(1);
+  std::string expect = encode_msgpack("{'a'=>[1]}");
+  obj->to_msgpack(&pkr_);
+  EXPECT_EQ(sbuf_.size(), expect.length());
+  EXPECT_TRUE(0 == memcmp(sbuf_.data(), expect.data(), sbuf_.size()));
+}
+
+TEST_F(MessageTest, AllowMapOverwriteRetain4) {
+  // If retaining map with same key, array should be replace with map.
+  fluent::Message::Map *obj = new fluent::Message::Map();
+  fluent::Message::Array *a1 = obj->retain_array("a");
+  ASSERT_NE(a1, nullptr);
+  a1->push(2);
+
+  fluent::Message::Map *m1 = obj->retain_map("a");
+  ASSERT_NE(m1, nullptr);
+  EXPECT_NE(static_cast<fluent::Message::Object*>(m1),
+            static_cast<fluent::Message::Object*>(a1));
+  m1->set("b", 3);
+  
+  std::string expect = encode_msgpack("{'a'=>{'b'=>3}}");
   obj->to_msgpack(&pkr_);
   EXPECT_EQ(sbuf_.size(), expect.length());
   EXPECT_TRUE(0 == memcmp(sbuf_.data(), expect.data(), sbuf_.size()));
