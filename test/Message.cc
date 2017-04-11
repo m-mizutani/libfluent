@@ -249,7 +249,7 @@ TEST_F(MessageTest, AllowMapOverwriteRetain4) {
   a1->push(2);
 
   fluent::Message::Map *m1 = obj->retain_map("a");
-  ASSERT_NE(m1, nullptr);
+  ASSERT_TRUE(m1 != nullptr);
   EXPECT_NE(static_cast<fluent::Message::Object*>(m1),
             static_cast<fluent::Message::Object*>(a1));
   m1->set("b", 3);
@@ -328,7 +328,7 @@ TEST(Message, MapGetObject) {
   EXPECT_TRUE(m.has_key("gnome"));
   EXPECT_FALSE(m.has_key("x"));
   EXPECT_EQ(m.get("gnome").as<fluent::Message::Fixnum>().val(), 1);
-  EXPECT_EQ(a.size(), 2);
+  EXPECT_EQ(2, a.size());
   EXPECT_EQ(a.get(0).as<fluent::Message::String>().val(), "druid");
   EXPECT_TRUE(a.get(1).as<fluent::Message::Nil>().is_nil());
   
