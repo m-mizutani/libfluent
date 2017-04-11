@@ -198,7 +198,7 @@ TEST_F(MessageTest, AllowMapOverwriteRetain1) {
 
   EXPECT_TRUE(obj->set("a", 1));
   fluent::Message::Map *m1 = obj->retain_map("a");
-  ASSERT_NE(m1, nullptr);
+  ASSERT_FALSE(m1 == nullptr);
   m1->set("b", 2);
 
   std::string expect = encode_msgpack("{'a'=>{'b'=>2}}");
@@ -212,7 +212,7 @@ TEST_F(MessageTest, AllowMapOverwriteRetain2) {
   // If retaining map with same key, retain_map should return same object.
   fluent::Message::Map *obj = new fluent::Message::Map();
   fluent::Message::Map *m1 = obj->retain_map("a");
-  ASSERT_NE(m1, nullptr);
+  ASSERT_FALSE(m1 == nullptr);
   m1->set("b", 2);
   fluent::Message::Map *m2 = obj->retain_map("a");
   EXPECT_EQ(m1, m2);
@@ -227,7 +227,7 @@ TEST_F(MessageTest, AllowMapOverwriteRetain3) {
   // If retaining array with same key, map should be replace with array.
   fluent::Message::Map *obj = new fluent::Message::Map();
   fluent::Message::Map *m1 = obj->retain_map("a");
-  ASSERT_NE(m1, nullptr);
+  ASSERT_FALSE(m1 == nullptr);
   m1->set("b", 2);
   
   fluent::Message::Array *a1 = obj->retain_array("a");
@@ -245,7 +245,7 @@ TEST_F(MessageTest, AllowMapOverwriteRetain4) {
   // If retaining map with same key, array should be replace with map.
   fluent::Message::Map *obj = new fluent::Message::Map();
   fluent::Message::Array *a1 = obj->retain_array("a");
-  ASSERT_NE(a1, nullptr);
+  ASSERT_FALSE(a1 == nullptr);
   a1->push(2);
 
   fluent::Message::Map *m1 = obj->retain_map("a");
