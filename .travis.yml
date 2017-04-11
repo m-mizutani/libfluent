@@ -1,5 +1,6 @@
 language: cpp
-
+dist: trusty
+sudo: false
 compiler:
   - clang
   - gcc
@@ -17,9 +18,9 @@ before_install:
   # update packages
   - cmake --version
   - gem install msgpack
-  - if [ "$TRAVIS_OS_NAME" == "linux" ]; then sudo apt update -y; fi
-  - if [ "$TRAVIS_OS_NAME" == "linux" ]; then sudo apt upgrade -y; fi
-  - if [ "$TRAVIS_OS_NAME" == "linux" ]; then sudo apt install -y build-essential libmsgpack-dev cmake libtool ; fi
+  - if [ "$TRAVIS_OS_NAME" == "linux" ]; then sudo apt-get update -y; fi
+  - if [ "$TRAVIS_OS_NAME" == "linux" ]; then sudo apt-get upgrade -y; fi
+  - if [ "$TRAVIS_OS_NAME" == "linux" ]; then sudo apt-get install -y build-essential libmsgpack-dev cmake libtool ; fi
   - if [ "$TRAVIS_OS_NAME" == "osx" ]; then brew update ; fi
   - if [ "$TRAVIS_OS_NAME" == "osx" ]; then brew install msgpack ; fi
      
