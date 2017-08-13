@@ -128,128 +128,86 @@ namespace fluent {
   }
 
   Message::Map* Message::Map::retain_map(const std::string &key) {
-    if (this->map_.find(key) == this->map_.end()) {
+    auto it = this->map_.find(key);
+    if (it == this->map_.end()) {
       Map *obj = new Map();
       this->map_.insert(std::make_pair(key, obj));
       return obj;
     } else {
-      // Already exists
-      return nullptr;
+      if (it->second->is<Map>()) {
+        return dynamic_cast<Map*>(it->second);
+      } else {
+        Map *obj = new Map();
+        delete it->second;
+        it->second = obj;
+        return obj;
+      }
     }
   }
 
   Message::Array* Message::Map::retain_array(const std::string &key) {
-    if (this->map_.find(key) == this->map_.end()) {
+    auto it = this->map_.find(key);
+    if (it == this->map_.end()) {
       Array *obj = new Array();
       this->map_.insert(std::make_pair(key, obj));
       return obj;
     } else {
-      // Already exists
-      return nullptr;
+      if (it->second->is<Array>()) {
+        return dynamic_cast<Array*>(it->second);
+      } else {
+        Array *obj = new Array();
+        delete it->second;
+        it->second = obj;
+        return obj;
+      }
     }
   }
   
   // TODO: refactoring to merge set int, string, float, bool
   bool Message::Map::set(const std::string &key, int val) {
-    if (this->map_.find(key) == this->map_.end()) {
-      // Create and insert value
-      Object *n = new Fixnum(val);
-      this->map_.insert(std::make_pair(key, n));
-      return true;
-    } else {
-      // Already exists
-      return false;
-    }
+    Object *n = new Fixnum(val);
+    return this->set(key, n);
   }
   bool Message::Map::set(const std::string &key, unsigned int val) {
-    if (this->map_.find(key) == this->map_.end()) {
-      // Create and insert value
-      Object *n = new Ufixnum(val);
-      this->map_.insert(std::make_pair(key, n));
-      return true;
-    } else {
-      // Already exists
-      return false;
-    }
-  }
-  
+    Object *n = new Ufixnum(val);
+    return this->set(key, n);
+  }  
   bool Message::Map::set(const std::string &key, const char *val) {
-    if (this->map_.find(key) == this->map_.end()) {
-      // Create and insert value
-      debug(DBG, "create String object\n");
-
-      Object *v = new String(val);
-      this->map_.insert(std::make_pair(key, v));
-      return true;
-    } else {
-      // Already exists
-      return false;
-    }
+    Object *v = new String(val);
+    return this->set(key, v);
   }
   bool Message::Map::set(const std::string &key, const std::string &val) {
-    if (this->map_.find(key) == this->map_.end()) {
-      // Create and insert value
-      debug(DBG, "create String object\n");
-
-      Object *v = new String(val);
-      this->map_.insert(std::make_pair(key, v));
-      return true;
-    } else {
-      // Already exists
-      return false;
-    }
+    Object *v = new String(val);
+    return this->set(key, v);
   }
   bool Message::Map::set(const std::string &key, double val) {
-
-    if (this->map_.find(key) == this->map_.end()) {
-      // Create and insert value
-      debug(DBG, "create Double object for %s\n", key.c_str());
-      Object *v = new Float(val);
-      this->map_.insert(std::make_pair(key, v));
-      return true;
-    } else {
-      // Already exists
-      return false;
-    }
+    Object *v = new Float(val);
+    return this->set(key, v);
   }
   bool Message::Map::set(const std::string &key, bool val) {
-
-    if (this->map_.find(key) == this->map_.end()) {
-      // Create and insert value
-      debug(DBG, "create Bool object for %s\n", key.c_str());
-      Object *v = new Bool(val);
-      this->map_.insert(std::make_pair(key, v));
-      return true;
-    } else {
-      // Already exists
-      return false;
-    }
+    Object *v = new Bool(val);
+    return this->set(key, v);
   }
   bool Message::Map::set(const std::string &key, Object *obj) {
-    if (this->map_.find(key) == this->map_.end()) {
-      // Create and insert value
-      debug(DBG, "create Object for %s\n", key.c_str());
-      this->map_.insert(std::make_pair(key, obj));
-      return true;
+    auto it = this->map_.find(key);
+
+    // Allow overwrite
+    if (it != this->map_.end()) {
+      // Delete and put value
+      delete it->second;
+      it->second = obj;
     } else {
-      // Already exists
-      return false;
+      // Create and insert value
+      this->map_.insert(std::make_pair(key, obj));
     }
+    
+    return true;
   }
 
   bool Message::Map::set_nil(const std::string &key) {
-    if (this->map_.find(key) == this->map_.end()) {
-      // Create and insert value
-      debug(DBG, "create Nil for %s\n", key.c_str());
-      Nil *obj = new Nil();
-      this->map_.insert(std::make_pair(key, obj));
-      return true;
-    } else {
-      // Already exists
-      return false;
-    }
+    Nil *obj = new Nil();
+    return this->set(key, obj);
   }
-
   
   bool Message::Map::del(const std::string &key) {
     auto it = this->map_.find(key);

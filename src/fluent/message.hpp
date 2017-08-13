@@ -118,6 +118,7 @@ namespace fluent {
     private:
       std::map<std::string, Object*> map_;
       static const bool DBG;
+
     public:
       Map();
       ~Map();

@@ -1,3 +1,9 @@
+2017-04-11: Version 1.1.0
+	New features
+	* Added codes for Windows (contributed by @RobotCaleb)
+	* Changed to allow overwrite of value in Message::Map
+	* Changed CMakeLists.txt to use the package as submodule next to MessagePack
+
 2016-01-03: Version 1.0.11
 	Bug fix
 	* Fixed relocation R_X86_64_32S error by OBJECT library feature
