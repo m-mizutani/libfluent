@@ -14,6 +14,7 @@ SET(EXECUTABLE_OUTPUT_PATH ${PROJECT_BINARY_DIR}/bin)
 SET(LIBRARY_OUTPUT_PATH ${PROJECT_BINARY_DIR}/lib)
 
 OPTION(FLUENT_INSTALL "install libfluent" ON)
+OPTION(USE_MSGPACK_STATIC "use static msgpack library" OFF)
 
 # cmake_policy(SET CMP0015 NEW)
 
@@ -38,8 +39,14 @@ ENDIF( CMAKE_SYSTEM_PROCESSOR STREQUAL "x86_64" )
 ADD_LIBRARY(fluent-shared SHARED $<TARGET_OBJECTS:objlib>)
 ADD_LIBRARY(fluent-static STATIC $<TARGET_OBJECTS:objlib>)
 
-TARGET_LINK_LIBRARIES(fluent-shared msgpackc pthread)
-TARGET_LINK_LIBRARIES(fluent-static msgpackc pthread)
+IF(USE_MSGPACK_STATIC)
+  TARGET_LINK_LIBRARIES(fluent-shared msgpackc-static pthread)
+  TARGET_LINK_LIBRARIES(fluent-static msgpackc-static pthread)
+ELSE(USE_MSGPACK_STATIC)
+  TARGET_LINK_LIBRARIES(fluent-shared msgpackc pthread)
+  TARGET_LINK_LIBRARIES(fluent-static msgpackc pthread)
+ENDIF(USE_MSGPACK_STATIC)
+
 SET_TARGET_PROPERTIES(fluent-shared PROPERTIES OUTPUT_NAME fluent)
 SET_TARGET_PROPERTIES(fluent-static PROPERTIES OUTPUT_NAME fluent)
 
