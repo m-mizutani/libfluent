@@ -265,6 +265,12 @@ namespace fluent {
     return map;
   }
 
+  Message::Array::~Array() {
+    for (auto it : this->array_) {
+      delete it;
+    }
+  }
+
   void Message::Array::push(const std::string &val) {
     Object *v = new String(val);
     this->array_.push_back(v);

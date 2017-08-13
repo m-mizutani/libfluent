@@ -149,7 +149,7 @@ namespace fluent {
       std::vector<Object*> array_;
     public:
       Array() {}
-      ~Array() {}
+      ~Array();
       Map *retain_map();
       Array *retain_array();
       void push(const std::string &val);
