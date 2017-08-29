@@ -76,6 +76,8 @@ protected:
       if (execvp("ruby", static_cast<char *const *>(argv)) < 0) {
         perror("execvp"); 
       }
+
+      delete argv;
     }
 
     // Running as parent.
@@ -106,7 +108,9 @@ TEST(Message, basic) {
   uint8_t data[] = {0x81, 0xa3, 0x61, 0x62, 0x63, 0x01};
   obj->to_msgpack(&pkr);
   EXPECT_EQ(sbuf.size(), sizeof(data));
-  EXPECT_TRUE(0 == memcmp(sbuf.data(), data, sizeof(data)));  
+  EXPECT_TRUE(0 == memcmp(sbuf.data(), data, sizeof(data)));
+
+  delete obj;
 }
 
 TEST_F(MessageTest, Map) {
@@ -125,6 +129,8 @@ TEST_F(MessageTest, Map) {
   obj->to_msgpack(&pkr_);
   EXPECT_EQ(sbuf_.size(), expect.length());
   EXPECT_TRUE(0 == memcmp(sbuf_.data(), expect.data(), sbuf_.size()));
+
+  delete obj;
 }
 
 TEST_F(MessageTest, Array) {
@@ -142,6 +148,8 @@ TEST_F(MessageTest, Array) {
   obj->to_msgpack(&pkr_);
   EXPECT_EQ(sbuf_.size(), expect.length());
   EXPECT_TRUE(0 == memcmp(sbuf_.data(), expect.data(), sbuf_.size()));
+
+  delete obj;
 }
 
 TEST_F(MessageTest, NestArray) {
@@ -159,6 +167,8 @@ TEST_F(MessageTest, NestArray) {
   obj->to_msgpack(&pkr_);
   EXPECT_EQ(sbuf_.size(), expect.length());
   EXPECT_TRUE(0 == memcmp(sbuf_.data(), expect.data(), sbuf_.size()));
+
+  delete obj;
 }
 
 TEST_F(MessageTest, NestMap) {
@@ -178,6 +188,8 @@ TEST_F(MessageTest, NestMap) {
   obj->to_msgpack(&pkr_);
   EXPECT_EQ(sbuf_.size(), expect.length());
   EXPECT_TRUE(0 == memcmp(sbuf_.data(), expect.data(), sbuf_.size()));
+
+  delete obj;
 }
 
 TEST_F(MessageTest, AllowMapOverwriteValue) {
@@ -191,6 +203,8 @@ TEST_F(MessageTest, AllowMapOverwriteValue) {
   obj->to_msgpack(&pkr_);
   EXPECT_EQ(sbuf_.size(), expect.length());
   EXPECT_TRUE(0 == memcmp(sbuf_.data(), expect.data(), sbuf_.size()));
+
+  delete obj;
 }
 
 TEST_F(MessageTest, AllowMapOverwriteRetain1) {
@@ -206,6 +220,8 @@ TEST_F(MessageTest, AllowMapOverwriteRetain1) {
   obj->to_msgpack(&pkr_);
   EXPECT_EQ(sbuf_.size(), expect.length());
   EXPECT_TRUE(0 == memcmp(sbuf_.data(), expect.data(), sbuf_.size()));
+
+  delete obj;
 }
 
 TEST_F(MessageTest, AllowMapOverwriteRetain2) {
@@ -221,6 +237,8 @@ TEST_F(MessageTest, AllowMapOverwriteRetain2) {
   obj->to_msgpack(&pkr_);
   EXPECT_EQ(sbuf_.size(), expect.length());
   EXPECT_TRUE(0 == memcmp(sbuf_.data(), expect.data(), sbuf_.size()));
+
+  delete obj;
 }
 
 TEST_F(MessageTest, AllowMapOverwriteRetain3) {
@@ -239,6 +257,8 @@ TEST_F(MessageTest, AllowMapOverwriteRetain3) {
   obj->to_msgpack(&pkr_);
   EXPECT_EQ(sbuf_.size(), expect.length());
   EXPECT_TRUE(0 == memcmp(sbuf_.data(), expect.data(), sbuf_.size()));
+
+  delete obj;
 }
 
 TEST_F(MessageTest, AllowMapOverwriteRetain4) {
@@ -258,6 +278,8 @@ TEST_F(MessageTest, AllowMapOverwriteRetain4) {
   obj->to_msgpack(&pkr_);
   EXPECT_EQ(sbuf_.size(), expect.length());
   EXPECT_TRUE(0 == memcmp(sbuf_.data(), expect.data(), sbuf_.size()));
+
+  delete obj;
 }
 
 TEST(Message, linkedMessage) {
@@ -342,6 +364,8 @@ TEST(Message, MapGetObject) {
   EXPECT_TRUE(n.is_nil());
 
   EXPECT_THROW(a.get(2), fluent::Exception::IndexError);
+
+  delete obj;
 }
 
 TEST(Message, clone) {
