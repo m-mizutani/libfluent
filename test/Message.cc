@@ -77,7 +77,7 @@ protected:
         perror("execvp"); 
       }
 
-      delete argv;
+      delete[] argv;
     }
 
     // Running as parent.
@@ -442,3 +442,4 @@ TEST(Message, clone) {
   delete msg1;
   delete msg2;
 }
+
