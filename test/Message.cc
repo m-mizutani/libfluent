@@ -386,6 +386,10 @@ TEST(Message, clone) {
   EXPECT_EQ(msg1->tag(), msg2->tag());
   EXPECT_EQ(msg1->ts(),  msg2->ts());
 
+  // Check keys
+  EXPECT_TRUE(msg2->has_key("i"));
+  EXPECT_FALSE(msg2->has_key("x"));
+  
   // Get objects.
   const fluent::Message::Object &obj_i = msg2->get("i");
   const fluent::Message::Object &obj_s = msg2->get("s");

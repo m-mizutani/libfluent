@@ -66,6 +66,10 @@ namespace fluent {
     const Object& get(const std::string &key) const {
       return this->root_->get(key);
     }
+    bool has_key(const std::string &key) const {
+      return this->root_->has_key(key);
+    }
+    
 
     // Convert to msgpack data format.
     void to_msgpack(msgpack::packer<msgpack::sbuffer> *pk) const;
