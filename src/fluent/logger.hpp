@@ -53,6 +53,8 @@ namespace fluent {
     void new_forward(const std::string &host, const std::string &port);
     void new_dumpfile(const std::string &fname);
     void new_dumpfile(int fd);
+    void new_textfile(const std::string &fname);
+    void new_textfile(int fd);
     MsgQueue* new_msgqueue();
     Message* retain_message(const std::string &tag);
     bool emit(Message *msg);

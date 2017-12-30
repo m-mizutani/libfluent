@@ -55,6 +55,36 @@ TEST_F(FluentTest, Logger) {
   delete logger;
 }
 
+TEST(Logger, textfile) {
+  struct stat st;
+  const std::string fname = "logger_test_output.txt";
+  const std::string tag = "test.file";
+  if (0 == ::stat(fname.c_str(), &st)) {
+    ASSERT_TRUE(0 == unlink(fname.c_str()));
+  }
+
+  fluent::Logger *logger = new fluent::Logger();
+  logger->new_textfile(fname);
+  fluent::Message *msg = logger->retain_message(tag);
+  msg->set("num", 1);
+  msg->set_ts(1514633395);
+  EXPECT_TRUE(logger->emit(msg));
+  delete logger;
+
+  std::string expected_text =
+      "2017-12-30T11:29:55+00:00\ttest.file\t{\"num\": 1}\n";
+  ASSERT_EQ (0, ::stat(fname.c_str(), &st));
+  char buf[BUFSIZ];
+  int fd = ::open(fname.c_str(), O_RDONLY);
+  ASSERT_TRUE(fd > 0);
+  int readsize = ::read(fd, buf, sizeof(buf));
+  ASSERT_TRUE(readsize > 0);
+
+  std::string text(buf, readsize);
+  EXPECT_EQ(expected_text, text);
+  EXPECT_TRUE(0 == unlink(fname.c_str()));
+}
+
 
 /*
  * Disabled because of unstable

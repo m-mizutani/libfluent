@@ -73,11 +73,19 @@ namespace fluent {
     this->emitter_.push_back(e);
   }
   void Logger::new_dumpfile(const std::string &fname) {
-    Emitter *e = new FileEmitter(fname);
+    Emitter *e = new FileEmitter(fname, FileEmitter::MsgPack);
     this->emitter_.push_back(e);
   }
   void Logger::new_dumpfile(int fd) {
-    Emitter *e = new FileEmitter(fd);
+    Emitter *e = new FileEmitter(fd, FileEmitter::MsgPack);
+    this->emitter_.push_back(e);
+  }
+  void Logger::new_textfile(const std::string &fname) {
+    Emitter *e = new FileEmitter(fname, FileEmitter::Text);
+    this->emitter_.push_back(e);
+  }
+  void Logger::new_textfile(int fd) {
+    Emitter *e = new FileEmitter(fd, FileEmitter::Text);
     this->emitter_.push_back(e);
   }
   MsgQueue* Logger::new_msgqueue() {
