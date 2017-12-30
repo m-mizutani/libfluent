@@ -172,8 +172,8 @@ namespace fluent {
 
   // ----------------------------------------------------------------
   // FileEmitter
-  FileEmitter::FileEmitter(const std::string &fname) :
-    Emitter(), enabled_(false), opened_(false) {
+  FileEmitter::FileEmitter(const std::string &fname, Format fmt) :
+    Emitter(), enabled_(false), opened_(false), format_(fmt) {
     // Setup socket.
 
     this->fd_ = ::open(fname.c_str(), O_WRONLY | O_CREAT | O_APPEND, 0644);
@@ -185,14 +185,15 @@ namespace fluent {
       this->start_worker();
     }
   }
-  FileEmitter::FileEmitter(int fd) : Emitter(), fd_(fd),
-                                     enabled_(false), opened_(false) {
+  FileEmitter::FileEmitter(int fd, Format fmt) :
+       Emitter(), fd_(fd), enabled_(false), opened_(false), format_(fmt) {
+       
 #ifndef _WIN32
     if (fcntl(fd, F_GETFL) < 0 && errno == EBADF) {
       this->set_errmsg("Invalid file descriptor");
-	} else
+    } else
 #endif
-	{
+    {
       this->enabled_ = true;
       this->start_worker();
     }
@@ -211,11 +212,25 @@ namespace fluent {
     Message *root;
     while (nullptr != (root = this->queue_.bulk_pop())) {
       for(Message *msg = root; msg; msg = msg->next()) {
-        msgpack::sbuffer buf;
-        msgpack::packer <msgpack::sbuffer> pk(&buf);
-        msg->to_msgpack(&pk);
+        int rc;
+        switch(this->format_) {
+          case MsgPack: {
+            msgpack::sbuffer buf;
+            msgpack::packer <msgpack::sbuffer> pk(&buf);
+            msg->to_msgpack(&pk);
 
-        int rc = ::write(this->fd_, buf.data(), buf.size());
+            rc = ::write(this->fd_, buf.data(), buf.size());
+            break;
+          }
+          case Text: {
+            std::stringstream ss;
+            msg->to_ostream(ss);
+            const std::string& s = ss.str();
+            rc = ::write(this->fd_, s.c_str(), s.length());
+            break;
+          }
+        }
+        
         if (rc < 0) {
           this->set_errmsg(strerror(errno));
         }

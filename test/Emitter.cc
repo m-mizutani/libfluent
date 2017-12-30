@@ -120,7 +120,7 @@ TEST_F(FluentTest, InetEmitter_QueueLimit) {
 }
 */
 
-TEST(FileEmitter, basic) {
+TEST(FileEmitter, msgpack_mode) {
   struct stat st;
   const std::string fname = "fileemitter_test_output.msg";
   const std::string tag = "test.file";
@@ -150,6 +150,33 @@ TEST(FileEmitter, basic) {
   EXPECT_TRUE(0 == memcmp(sbuf.data(), buf, sbuf.size()));
   EXPECT_TRUE(0 == unlink(fname.c_str()));  
 }
+
+TEST(FileEmitter, text_mode) {
+  struct stat st;
+  const std::string fname = "fileemitter_test_output.txt";
+  const std::string tag = "test.file";
+  if (0 == ::stat(fname.c_str(), &st)) {
+    ASSERT_TRUE(0 == unlink(fname.c_str()));
+  }
+
+  fluent::FileEmitter *e =
+      new fluent::FileEmitter(fname, fluent::FileEmitter::Text);
+  fluent::Message *msg = new fluent::Message(tag);
+  msg->set("num", 1);
+  msg->set_ts(100000);
+  EXPECT_TRUE(e->emit(msg));
+  delete e;
+
+  ASSERT_EQ (0, ::stat(fname.c_str(), &st));
+  uint8_t buf[BUFSIZ];
+  int fd = ::open(fname.c_str(), O_RDONLY);
+  ASSERT_TRUE(fd > 0);
+  int readsize = ::read(fd, buf, sizeof(buf));
+  ASSERT_TRUE(readsize > 0);
+
+  EXPECT_TRUE(0 == unlink(fname.c_str()));
+}
+
 
 
 TEST(QueueEmitter, basic) {

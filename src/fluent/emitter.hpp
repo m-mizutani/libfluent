@@ -81,13 +81,21 @@ namespace fluent {
   };
 
   class FileEmitter : public Emitter {
-  private:
+   public:
+    enum Format {
+      MsgPack,
+      Text,
+    };
+    
+   private:
     int fd_;
     bool enabled_;
     bool opened_;
-  public:
-    FileEmitter(const std::string &fname);
-    FileEmitter(int fd);
+    Format format_;
+
+   public:
+    FileEmitter(const std::string &fname, Format fmt=MsgPack);
+    FileEmitter(int fd, Format fmt=MsgPack);
     ~FileEmitter();
     void worker();
   };
@@ -96,7 +104,7 @@ namespace fluent {
   private:
     MsgQueue *q_;
   public:
-    QueueEmitter(MsgQueue *q);
+    explicit QueueEmitter(MsgQueue *q);
     ~QueueEmitter();
     void worker();
     bool emit(Message *msg);    
