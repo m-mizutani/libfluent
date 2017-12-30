@@ -83,9 +83,14 @@ namespace fluent {
     return ;
   }
   void Message::to_ostream(std::ostream &os) const {
-    os << "[" << this->tag_ << ", " << this->ts_ << ", ";
+    struct tm time;
+    gmtime_r(&(this->ts_), &time);
+    char buf[128];
+    strftime(buf, sizeof(buf), "%Y-%m-%dT%H:%M:%S+00:00", &time);
+
+    os << buf << "\t" << this->tag_ << "\t";
     this->root_->to_ostream(os);
-    os << "]";
+    os << "\n";
   }
   
   void Message::attach(Message *next) {
