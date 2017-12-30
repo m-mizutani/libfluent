@@ -56,6 +56,9 @@ TEST_F(FluentTest, Logger) {
 }
 
 
+/*
+ * Disabled because of unstable
+ *
 TEST_F(FluentTest, QueueLimit) {
   fluent::Logger *logger = new fluent::Logger();
   logger->new_forward("localhost", 24224);
@@ -94,6 +97,7 @@ TEST_F(FluentTest, QueueLimit) {
   
   delete logger;
 }
+*/
 
 TEST(Logger, QueueEmitter) {
   fluent::Logger *logger = new fluent::Logger();

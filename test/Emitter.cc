@@ -74,7 +74,9 @@ TEST_F(FluentTest, InetEmitter_with_string_portnum) {
   delete e;
 }
 
-
+/*
+ * Disabled because of unstable interuction with other process
+ *
 TEST_F(FluentTest, InetEmitter_QueueLimit) {
   fluent::InetEmitter *e = new fluent::InetEmitter("localhost", 24224);
   std::string res_tag, res_ts, res_rec;
@@ -116,7 +118,7 @@ TEST_F(FluentTest, InetEmitter_QueueLimit) {
   
   delete e;  
 }
-
+*/
 
 TEST(FileEmitter, basic) {
   struct stat st;
