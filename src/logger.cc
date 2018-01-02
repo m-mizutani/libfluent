@@ -129,6 +129,9 @@ namespace fluent {
         rc &= this->emitter_[i]->emit(cloned_msg);
       }
       rc &= this->emitter_[this->emitter_.size() - 1]->emit(msg);
+    } else {
+      // no output
+      delete msg;
     }
     
     return rc;
